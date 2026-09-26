@@ -1,0 +1,24 @@
+{
+	"$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+	"name": "agent-harness",
+	"version": "0.0.0",
+	"description": "Detect which AI agent harness is running and query its managed-policy locations, plugin storage, enabled plugins, and skill naming.",
+	"author": {
+		"name": "unional"
+	},
+	"homepage": "https://github.com/cyberuni/agent-harness",
+	"repository": "https://github.com/cyberuni/agent-harness",
+	"license": "MIT",
+	"keywords": ["agent-harness", "claude-code", "cursor", "codex", "copilot-cli"],
+	"extensions": {
+		"org.cyberuni.universal-plugin": {
+			"skills": "./skills/",
+			"harnesses": {
+				"claude-code": {},
+				"cursor": {},
+				"codex": {},
+				"copilot-cli": {}
+			}
+		}
+	}
+}
