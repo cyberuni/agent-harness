@@ -43,6 +43,24 @@ It reports `unknown` instead of guessing:
 
 Pass `{ env }` to inspect an environment other than `process.env`.
 
+## Managed policy
+
+```ts
+import { managedPolicyLocations } from '@cyberuni/agent-harness'
+
+managedPolicyLocations('claude-code', { platform: 'linux' })
+// [
+//   { kind: 'server', location: 'claude.ai admin console or a self-hosted Claude apps gateway', … },
+//   { kind: 'file', location: '/etc/claude-code/managed-settings.json', … },
+//   { kind: 'directory', location: '/etc/claude-code/managed-settings.d', … },
+//   { kind: 'file', location: '/etc/claude-code/managed-mcp.json', … },
+// ]
+```
+
+`kind` is `file` or `directory` for what a caller can read from disk, `macos-managed-preferences`
+or `windows-registry` for MDM delivery, and `server` for policy held by the vendor or the
+organization. A `server` entry means the local files are not the whole policy.
+
 ## Why this exists
 
 `universal-plugin`, `buddy-agent-harness`, `repobuddy`, and `cyberlegion/cyber-mux` each need to know
