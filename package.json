@@ -1,0 +1,32 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "turbo build",
+		"check": "biome check --write",
+		"cs": "changeset",
+		"dev": "pnpm --filter @cyberuni/agent-harness dev",
+		"format": "biome format --write .",
+		"prepare": "node -e \"if(!(process.env.CI||process.env.GITHUB_ACTIONS))require('child_process').execSync('husky',{stdio:'inherit'})\"",
+		"release": "changeset publish",
+		"test": "turbo test",
+		"typecheck": "turbo typecheck",
+		"up": "pnpm --filter ./packages/agent-harness",
+		"verify": "turbo verify",
+		"version": "changeset version",
+		"web": "pnpm --filter web"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.16",
+		"@changesets/cli": "^3.0.0",
+		"@commitlint/cli": "^21.0.2",
+		"@commitlint/config-conventional": "^21.0.2",
+		"@repobuddy/biome": "^2.3.1",
+		"husky": "^9.1.7",
+		"turbo": "^2.9.16"
+	},
+	"packageManager": "pnpm@11.5.3+sha512.7ac1c919341c213a34dc0d02afb7143c5c26ac26ee8c4782deea821b8ac64d2134a081fd8941dae6e29bbb48f58dfc2b7fbceeccc07cb2f09d219d342a4969ed",
+	"engines": {
+		"node": ">=22"
+	}
+}

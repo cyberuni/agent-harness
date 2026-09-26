@@ -1,0 +1,33 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+	"extends": ["@repobuddy/biome/recommended"],
+	"files": {
+		"includes": [
+			"!!**/bin",
+			"!!**/dist",
+			"!!**/node_modules",
+			"!!.turbo",
+			"!!**/.astro",
+			"!!**/.agents/*.json",
+			// Derived by `universal-plugin plugin build`. Its writer and the formatter disagree on
+			// array wrapping, so linting these makes every build/lint cycle flip them back and forth.
+			"!!**/.claude-plugin/plugin.json",
+			"!!**/.cursor-plugin/plugin.json",
+			"!!**/.codex-plugin/plugin.json"
+		]
+	},
+	"overrides": [
+		{
+			"includes": ["packages/*/src/**/*.ts", "packages/*/src/**/*.mts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": {
+							"level": "off"
+						}
+					}
+				}
+			}
+		}
+	]
+}
