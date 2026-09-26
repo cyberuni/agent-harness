@@ -86,7 +86,7 @@ settings.
 | Claude Code | `/<plugin>:<skill>`; bare `/<skill>` also works when no other command has the name | — | Yes | E-CC-S1 |
 | Cursor | `/<skill>` | — | No | E-CUR-S1 |
 | Codex | `/skills` opens a picker | `$<skill>` | No; skills are bare names (Medium) | E-CODEX-S1–S3 |
-| Copilot CLI | `/<skill>` | — | No; first skill found with the name wins | E-COPILOT-S1, E-COPILOT-S2, E-COPILOT-S5 |
+| Copilot CLI | `/<skill>` | — | No; first skill found with the name wins | E-COPILOT-S2, E-COPILOT-S5, E-COPILOT-S6 |
 
 The skill's frontmatter `name` supplies the skill segment in every harness.
 

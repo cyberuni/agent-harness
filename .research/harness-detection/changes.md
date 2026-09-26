@@ -18,3 +18,8 @@ vendor sources:
 - Codex detection. `CODEX_COMPANION_*` were reattributed to the parent Claude Code session.
   `CODEX_CI=1` was confirmed in source.
 - Removed account-identifying values (a team id and team name) from E-CUR-M2.
+
+## 2026-09-26 — Copilot CLI slash form sourced
+
+Added E-COPILOT-S6, GitHub's own statement that a skill is invoked by its name after a forward
+slash, so the `/<skill>` form in R4 no longer rests on the `skill list` output alone.
