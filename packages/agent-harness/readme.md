@@ -80,6 +80,33 @@ pluginStorage('codex')
 Paths are computed, not checked, so a location may not exist until the first plugin is installed.
 Cursor has no `enabled-record`: no file records which of its plugins are enabled.
 
+## Enabled plugins
+
+```ts
+import { enabledPlugins } from '@cyberuni/agent-harness'
+
+const result = await enabledPlugins('claude-code')
+// {
+//   harness: 'claude-code',
+//   supported: true,
+//   plugins: [{ id: 'my-plugin@my-marketplace', enabled: true, scope: 'project', source: '/repo/.claude/settings.json' }],
+//   sources: [{ scope: 'managed', path: '/etc/claude-code/managed-settings.json', found: false }, …],
+//   unread: ['server-managed settings (claude.ai admin console or a self-hosted Claude apps gateway)', …],
+//   research: ['E-CC-P3', …],
+// }
+```
+
+| Harness | Files read, highest precedence first |
+| --- | --- |
+| Claude Code | managed `managed-settings.json`, `.claude/settings.local.json`, `.claude/settings.json`, `<config dir>/settings.json` |
+| Codex | `<config dir>/config.toml` |
+| GitHub Copilot CLI | managed `managed-settings.json`, `.github/copilot/settings.local.json`, `.github/copilot/settings.json`, `<config dir>/settings.json` |
+| Cursor | none: `supported` is `false` |
+
+Only plugins with an explicit entry are reported. A plugin with no entry falls back to a default
+this package does not know. When `unread` is not empty, MDM or server-managed policy can still
+override the answer.
+
 ## Why this exists
 
 `universal-plugin`, `buddy-agent-harness`, `repobuddy`, and `cyberlegion/cyber-mux` each need to know

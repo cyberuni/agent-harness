@@ -13,5 +13,13 @@ export type {
 	ManagedPolicyOptions,
 } from './managed-policy/managed-policy-locations.js'
 export { managedPolicyLocations } from './managed-policy/managed-policy-locations.js'
+export type {
+	EnabledPluginSource,
+	EnabledPluginsOptions,
+	EnabledPluginsResult,
+	PluginEnablement,
+	PluginScope,
+} from './plugins/enabled-plugins.js'
+export { enabledPlugins } from './plugins/enabled-plugins.js'
 export type { PluginStorage, PluginStorageKind, PluginStorageLocation } from './plugins/plugin-storage.js'
 export { pluginStorage } from './plugins/plugin-storage.js'
