@@ -4,6 +4,7 @@ export type {
 	HarnessEvidence,
 } from './detection/detect-harness.js'
 export { detectHarness } from './detection/detect-harness.js'
+export type { HarnessEnvironment } from './harness/harness-environment.js'
 export type { HarnessId } from './harness/harness-id.js'
 export { harnessIds } from './harness/harness-id.js'
 export type {
@@ -12,3 +13,5 @@ export type {
 	ManagedPolicyOptions,
 } from './managed-policy/managed-policy-locations.js'
 export { managedPolicyLocations } from './managed-policy/managed-policy-locations.js'
+export type { PluginStorage, PluginStorageKind, PluginStorageLocation } from './plugins/plugin-storage.js'
+export { pluginStorage } from './plugins/plugin-storage.js'

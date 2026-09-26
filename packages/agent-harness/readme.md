@@ -61,6 +61,25 @@ managedPolicyLocations('claude-code', { platform: 'linux' })
 or `windows-registry` for MDM delivery, and `server` for policy held by the vendor or the
 organization. A `server` entry means the local files are not the whole policy.
 
+## Plugin storage
+
+```ts
+import { pluginStorage } from '@cyberuni/agent-harness'
+
+pluginStorage('codex')
+// {
+//   harness: 'codex',
+//   configDir: '/home/me/.codex',
+//   locations: [
+//     { kind: 'plugin-cache', path: '/home/me/.codex/plugins/cache', … },
+//     { kind: 'enabled-record', path: '/home/me/.codex/config.toml', … },
+//   ],
+// }
+```
+
+Paths are computed, not checked, so a location may not exist until the first plugin is installed.
+Cursor has no `enabled-record`: no file records which of its plugins are enabled.
+
 ## Why this exists
 
 `universal-plugin`, `buddy-agent-harness`, `repobuddy`, and `cyberlegion/cyber-mux` each need to know
