@@ -1,9 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { detectHarness } from './index.js'
 
 describe('detectHarness', () => {
-	it('reports unknown with no evidence, since detection is not yet implemented', () => {
-		expect(detectHarness()).toEqual({ harness: 'unknown', evidence: [] })
+	afterEach(() => {
+		vi.unstubAllEnvs()
+	})
+
+	it('reads process.env when no environment is passed', () => {
+		vi.stubEnv('CURSOR_AGENT', '1')
+
+		expect(detectHarness().evidence).toContainEqual(
+			expect.objectContaining({ harness: 'cursor', signal: 'CURSOR_AGENT' }),
+		)
 	})
 })
