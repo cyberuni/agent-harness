@@ -107,6 +107,18 @@ Only plugins with an explicit entry are reported. A plugin with no entry falls b
 this package does not know. When `unread` is not empty, MDM or server-managed policy can still
 override the answer.
 
+## Skill naming and plugin dependencies
+
+```ts
+import { skillInvocation, supportsPluginDependencies } from '@cyberuni/agent-harness'
+
+skillInvocation('claude-code', { plugin: 'my-plugin', skill: 'review' }).text // '/my-plugin:review'
+skillInvocation('copilot-cli', { plugin: 'my-plugin', skill: 'review' }).text // '/review'
+skillInvocation('codex', { plugin: 'my-plugin', skill: 'review' }).text // '$review'
+
+supportsPluginDependencies('claude-code') // true; false for the others
+```
+
 ## Why this exists
 
 `universal-plugin`, `buddy-agent-harness`, `repobuddy`, and `cyberlegion/cyber-mux` each need to know
