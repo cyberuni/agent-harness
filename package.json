@@ -10,6 +10,7 @@
 		"prepare": "node -e \"if(!(process.env.CI||process.env.GITHUB_ACTIONS))require('child_process').execSync('husky',{stdio:'inherit'})\"",
 		"release": "changeset publish",
 		"test": "turbo test",
+		"test:scripts": "node --test \"scripts/**/*.test.mjs\"",
 		"typecheck": "turbo typecheck",
 		"up": "pnpm --filter ./packages/agent-harness",
 		"verify": "turbo verify",
