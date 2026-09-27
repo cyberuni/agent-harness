@@ -7,7 +7,13 @@
 		"claude-code",
 		"cursor",
 		"codex",
-		"copilot-cli"
+		"copilot-cli",
+		"opencode",
+		"kilo-code",
+		"gemini-cli",
+		"qwen-code",
+		"vscode",
+		"cline"
 	],
 	"repository": {
 		"type": "git",

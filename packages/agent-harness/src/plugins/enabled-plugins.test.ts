@@ -151,6 +151,13 @@ describe('enabledPlugins', () => {
 		expect(await enabledPlugins('cursor', environment())).toMatchObject({ supported: false, plugins: [], sources: [] })
 	})
 
+	it.each(['opencode', 'kilo', 'gemini-cli', 'qwen-code', 'vscode-copilot', 'cline'] as const)(
+		'reports %s as unsupported, since it keeps no boolean enabled-plugin record',
+		async (harness) => {
+			expect(await enabledPlugins(harness, environment())).toMatchObject({ supported: false, plugins: [], sources: [] })
+		},
+	)
+
 	it('records a settings file it cannot parse and ignores its entries', async () => {
 		await put(join(home, '.claude/settings.json'), '{ not json')
 

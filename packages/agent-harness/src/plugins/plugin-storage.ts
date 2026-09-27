@@ -1,6 +1,10 @@
-import { join } from 'node:path'
+import { join, win32 } from 'node:path'
 
-import { type HarnessEnvironment, resolveHarnessEnvironment } from '../harness/harness-environment.js'
+import {
+	type HarnessEnvironment,
+	type ResolvedHarnessEnvironment,
+	resolveHarnessEnvironment,
+} from '../harness/harness-environment.js'
 import type { HarnessId } from '../harness/harness-id.js'
 
 /**
@@ -39,14 +43,25 @@ export interface PluginStorage {
  * not exist until the first plugin is installed.
  */
 export function pluginStorage(harness: HarnessId, environment: HarnessEnvironment = {}): PluginStorage {
-	const { env, homedir } = resolveHarnessEnvironment(environment)
-	return storages[harness](env, homedir)
+	return storages[harness](resolveHarnessEnvironment(environment))
 }
 
-type Env = Readonly<Record<string, string | undefined>>
+/** `$XDG_CONFIG_HOME`, else `~/.config`, as the `xdg-basedir` package resolves it. */
+const xdgConfig = ({ env, homedir }: ResolvedHarnessEnvironment) => env.XDG_CONFIG_HOME || join(homedir, '.config')
 
-const storages: Record<HarnessId, (env: Env, homedir: string) => PluginStorage> = {
-	'claude-code': (env, homedir) => {
+/** The agent plugin folder of the stable VS Code build, per OS (E-VSC-P3). */
+function vscodeAgentPlugins({ env, homedir, platform }: ResolvedHarnessEnvironment) {
+	if (platform === 'win32') {
+		const configDir = win32.join(env.APPDATA || win32.join(homedir, 'AppData', 'Roaming'), 'Code')
+		return { configDir, path: win32.join(configDir, 'agentPlugins') }
+	}
+	const configDir =
+		platform === 'darwin' ? join(homedir, 'Library', 'Application Support', 'Code') : join(homedir, '.config', 'Code')
+	return { configDir, path: join(configDir, 'agentPlugins') }
+}
+
+const storages: Record<HarnessId, (environment: ResolvedHarnessEnvironment) => PluginStorage> = {
+	'claude-code': ({ env, homedir }) => {
 		const configDir = env.CLAUDE_CONFIG_DIR || join(homedir, '.claude')
 		const plugins = join(configDir, 'plugins')
 		return {
@@ -80,7 +95,7 @@ const storages: Record<HarnessId, (env: Env, homedir: string) => PluginStorage> 
 			],
 		}
 	},
-	cursor: (_env, homedir) => {
+	cursor: ({ homedir }) => {
 		// The shipped CLI builds these from the home directory, not from a config-dir override.
 		const configDir = join(homedir, '.cursor')
 		return {
@@ -102,7 +117,7 @@ const storages: Record<HarnessId, (env: Env, homedir: string) => PluginStorage> 
 			],
 		}
 	},
-	codex: (env, homedir) => {
+	codex: ({ env, homedir }) => {
 		const configDir = env.CODEX_HOME || join(homedir, '.codex')
 		return {
 			harness: 'codex',
@@ -123,7 +138,7 @@ const storages: Record<HarnessId, (env: Env, homedir: string) => PluginStorage> 
 			],
 		}
 	},
-	'copilot-cli': (env, homedir) => {
+	'copilot-cli': ({ env, homedir }) => {
 		const configDir = env.COPILOT_HOME || join(homedir, '.copilot')
 		return {
 			harness: 'copilot-cli',
@@ -146,6 +161,111 @@ const storages: Record<HarnessId, (env: Env, homedir: string) => PluginStorage> 
 					path: join(configDir, 'settings.json'),
 					description: 'User settings (JSON with comments); enabledPlugins maps plugin specs to a boolean',
 					research: 'E-COPILOT-P4',
+				},
+			],
+		}
+	},
+	opencode: (environment) => {
+		const configDir = join(xdgConfig(environment), 'opencode')
+		return {
+			harness: 'opencode',
+			configDir,
+			locations: [
+				{
+					kind: 'local-plugins',
+					path: join(configDir, 'plugins'),
+					description: 'JS/TS plugin modules loaded at startup; npm plugins are named in the plugin config array',
+					research: 'E-OC-P2',
+				},
+			],
+		}
+	},
+	kilo: (environment) => {
+		const configDir = join(xdgConfig(environment), 'kilo')
+		return {
+			harness: 'kilo',
+			configDir,
+			locations: [
+				{
+					kind: 'local-plugins',
+					path: join(configDir, 'plugin'),
+					description: 'JS/TS plugin modules loaded at startup; npm plugins are named in the plugin config array',
+					research: 'E-KILO-P2',
+				},
+			],
+		}
+	},
+	'gemini-cli': ({ env, homedir }) => {
+		const configDir = join(env.GEMINI_CLI_HOME || homedir, '.gemini')
+		const extensions = join(configDir, 'extensions')
+		return {
+			harness: 'gemini-cli',
+			configDir,
+			locations: [
+				{
+					kind: 'installed-plugins',
+					path: extensions,
+					description: 'Installed extensions, one folder each with a gemini-extension.json manifest',
+					research: 'E-GEM-P1',
+				},
+				{
+					kind: 'enabled-record',
+					path: join(extensions, 'extension-enablement.json'),
+					description: 'Per-extension path-glob overrides that enable or disable it by folder, not a boolean',
+					research: 'E-GEM-P3',
+				},
+			],
+		}
+	},
+	'qwen-code': ({ env, homedir }) => {
+		const configDir = env.QWEN_HOME || join(homedir, '.qwen')
+		const extensions = join(configDir, 'extensions')
+		return {
+			harness: 'qwen-code',
+			configDir,
+			locations: [
+				{
+					kind: 'installed-plugins',
+					path: extensions,
+					description: 'Installed extensions, one folder each with a qwen-extension.json manifest',
+					research: 'E-QWEN-P1',
+				},
+				{
+					kind: 'enabled-record',
+					path: join(extensions, 'extension-enablement.json'),
+					description: "Extension enable/disable state, inherited from Gemini CLI's format",
+					research: 'E-QWEN-P2',
+				},
+			],
+		}
+	},
+	'vscode-copilot': (environment) => {
+		const { configDir, path } = vscodeAgentPlugins(environment)
+		return {
+			harness: 'vscode-copilot',
+			configDir,
+			locations: [
+				{
+					kind: 'installed-plugins',
+					path,
+					description: 'Installed agent plugins as <host>/<org>/<repo>/',
+					research: 'E-VSC-P3',
+				},
+			],
+		}
+	},
+	cline: ({ homedir }) => {
+		// CLINE_DATA_DIR is documented without saying which folder it replaces, so it is not applied.
+		const configDir = join(homedir, '.cline')
+		return {
+			harness: 'cline',
+			configDir,
+			locations: [
+				{
+					kind: 'installed-plugins',
+					path: join(configDir, 'plugins', '_installed'),
+					description: 'Installed plugins, grouped by source: npm, git, remote, or local',
+					research: 'E-CLINE-P3',
 				},
 			],
 		}

@@ -46,6 +46,72 @@ type Env = Readonly<Record<string, string | undefined>>
 type Locator = (platform: NodeJS.Platform, env: Env) => ManagedPolicyLocation[]
 
 const joinFor = (platform: NodeJS.Platform) => (platform === 'win32' ? win32.join : posix.join)
+const dirnameFor = (platform: NodeJS.Platform) => (platform === 'win32' ? win32.dirname : posix.dirname)
+
+/**
+ * OpenCode and Kilo Code: a managed config folder per OS, outranked by the macOS managed-preferences
+ * domain, which Kilo Code did not rename (E-OC-M1, E-KILO-M2).
+ */
+function opencodeFamily(
+	platform: NodeJS.Platform,
+	env: Env,
+	app: string,
+	research: { readonly directory: string; readonly preferences: string },
+): ManagedPolicyLocation[] {
+	const directory = {
+		darwin: `/Library/Application Support/${app}`,
+		linux: `/etc/${app}`,
+		win32: win32.join(env.ProgramData ?? 'C:\\ProgramData', app),
+	}[platform as string]
+	return [
+		...when(platform === 'darwin', {
+			kind: 'macos-managed-preferences',
+			location: 'ai.opencode.managed',
+			description: 'MDM configuration profile; outranks the managed config folder',
+			research: research.preferences,
+		}),
+		...when(directory !== undefined, {
+			kind: 'directory',
+			location: directory ?? '',
+			description: 'Managed config files; outrank user and project config',
+			research: research.directory,
+		}),
+	]
+}
+
+/**
+ * Gemini CLI and Qwen Code: a system settings file that outranks user settings, and a
+ * system-defaults file beside it that user settings override. Each path has an override variable.
+ */
+function geminiFamily(
+	platform: NodeJS.Platform,
+	env: Env,
+	names: {
+		readonly settingsVariable: string
+		readonly defaultsVariable: string
+		readonly dirs: Readonly<Record<'darwin' | 'linux' | 'win32', string>>
+		readonly research: string
+	},
+): ManagedPolicyLocation[] {
+	const dir = platform === 'darwin' || platform === 'win32' ? names.dirs[platform] : names.dirs.linux
+	const settings = env[names.settingsVariable] || joinFor(platform)(dir, 'settings.json')
+	const defaults =
+		env[names.defaultsVariable] || joinFor(platform)(dirnameFor(platform)(settings), 'system-defaults.json')
+	return [
+		{
+			kind: 'file',
+			location: settings,
+			description: `System settings; outrank user and workspace settings. ${names.settingsVariable} overrides the path`,
+			research: names.research,
+		},
+		{
+			kind: 'file',
+			location: defaults,
+			description: `System defaults; user and workspace settings override them. ${names.defaultsVariable} overrides the path`,
+			research: names.research,
+		},
+	]
+}
 
 /** Include `items` only when `condition` holds. */
 const when = (condition: boolean, ...items: ManagedPolicyLocation[]) => (condition ? items : [])
@@ -206,4 +272,60 @@ const locators: Record<HarnessId, Locator> = {
 			}),
 		]
 	},
+	opencode: (platform, env) => [
+		...opencodeFamily(platform, env, 'opencode', { directory: 'E-OC-M1', preferences: 'E-OC-M1' }),
+		{
+			kind: 'server',
+			location: 'Remote config at the organization domain /.well-known/opencode',
+			description: 'Organization defaults; the lowest-ranked config source, so user config overrides them',
+			research: 'E-OC-M2',
+		},
+	],
+	kilo: (platform, env) => opencodeFamily(platform, env, 'kilo', { directory: 'E-KILO-M1', preferences: 'E-KILO-M2' }),
+	'gemini-cli': (platform, env) =>
+		geminiFamily(platform, env, {
+			settingsVariable: 'GEMINI_CLI_SYSTEM_SETTINGS_PATH',
+			defaultsVariable: 'GEMINI_CLI_SYSTEM_DEFAULTS_PATH',
+			dirs: {
+				darwin: '/Library/Application Support/GeminiCli',
+				linux: '/etc/gemini-cli',
+				win32: 'C:\\ProgramData\\gemini-cli',
+			},
+			research: 'E-GEM-M1',
+		}),
+	'qwen-code': (platform, env) =>
+		geminiFamily(platform, env, {
+			settingsVariable: 'QWEN_CODE_SYSTEM_SETTINGS_PATH',
+			defaultsVariable: 'QWEN_CODE_SYSTEM_DEFAULTS_PATH',
+			dirs: {
+				darwin: '/Library/Application Support/QwenCode',
+				linux: '/etc/qwen-code',
+				win32: 'C:\\ProgramData\\qwen-code',
+			},
+			research: 'E-QWEN-M1',
+		}),
+	'vscode-copilot': (platform) => [
+		...when(platform === 'win32', {
+			kind: 'windows-registry',
+			// The docs give the key without a hive.
+			location: 'Software\\Policies\\Microsoft\\VSCode',
+			description: 'VS Code policies set by Group Policy (ADMX templates ship with VS Code)',
+			research: 'E-VSC-M1',
+		}),
+		// macOS takes a .mobileconfig profile, but the docs do not name its preference domain (E-VSC-M2).
+		...when(platform === 'linux', {
+			kind: 'file',
+			location: '/etc/vscode/policy.json',
+			description: 'VS Code policies as JSON, read by VS Code 1.106 and later',
+			research: 'E-VSC-M3',
+		}),
+	],
+	cline: () => [
+		{
+			kind: 'server',
+			location: 'Cline Enterprise admin console',
+			description: 'Provider, model, and tool policy pushed to clients; no local policy file is documented',
+			research: 'E-CLINE-M1',
+		},
+	],
 }

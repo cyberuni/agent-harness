@@ -2,8 +2,8 @@
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cyberuni/agent-harness/blob/main/LICENSE)
 
-Detect which AI agent harness is running — Claude Code, Cursor, Codex, or GitHub Copilot CLI — and
-query what it holds: its managed-policy locations, plugin storage, enabled plugins, and how it names
+Detect which AI agent harness is running — Claude Code, Cursor, Codex, GitHub Copilot CLI, OpenCode,
+Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, or Cline — and query what it holds: its managed-policy locations, plugin storage, enabled plugins, and how it names
 plugin skills.
 
 **Status: pre-release.** Every fact this library encodes rests on
@@ -33,13 +33,22 @@ Detection reads environment variables that each harness sets on the processes it
 | Cursor | `CURSOR_AGENT=1`, or `CURSOR_VERSION` with `CURSOR_PROJECT_DIR` in hooks |
 | Codex | `CODEX_THREAD_ID` |
 | GitHub Copilot CLI | `COPILOT_CLI=1`, `COPILOT_AGENT_SESSION_ID`, or `COPILOT_PLUGIN_ROOT` in hooks |
+| OpenCode | `OPENCODE=1` with `OPENCODE_PID` |
+| Kilo Code | `KILO=1` with `KILO_PID` |
+| Gemini CLI | `GEMINI_CLI=1` |
+| Qwen Code | `QWEN_CODE=1` |
+| GitHub Copilot in VS Code | `COPILOT_AGENT=1` |
+| Cline | `CLINE_ACTIVE=true`, set by the VS Code extension only |
 
 It reports `unknown` instead of guessing:
 
 - when no harness matches, including `CLAUDECODE=1` on its own, which IDE extensions also set;
 - when more than one harness matches, as when one harness runs inside another's shell. The matches
   are listed in `candidates`;
-- in Codex hook commands, which carry no Codex-specific variable.
+- for `AGENT=1` and `AI_AGENT`, which several vendors set, and for `OPENCODE=1` alone, which Kilo
+  Code, an OpenCode fork, also sets;
+- in contexts where a harness sets nothing of its own: Codex, Gemini CLI, and Qwen Code hooks, Qwen
+  Code MCP servers, and the Cline CLI.
 
 Pass `{ env }` to inspect an environment other than `process.env`.
 
@@ -101,7 +110,7 @@ const result = await enabledPlugins('claude-code')
 | Claude Code | managed `managed-settings.json`, `.claude/settings.local.json`, `.claude/settings.json`, `<config dir>/settings.json` |
 | Codex | `<config dir>/config.toml` |
 | GitHub Copilot CLI | managed `managed-settings.json`, `.github/copilot/settings.local.json`, `.github/copilot/settings.json`, `<config dir>/settings.json` |
-| Cursor | none: `supported` is `false` |
+| Cursor, OpenCode, Kilo Code, Gemini CLI, Qwen Code, Copilot in VS Code, Cline | none: `supported` is `false` |
 
 Only plugins with an explicit entry are reported. A plugin with no entry falls back to a default
 this package does not know. When `unread` is not empty, MDM or server-managed policy can still
@@ -112,9 +121,10 @@ override the answer.
 ```ts
 import { skillInvocation, supportsPluginDependencies } from '@cyberuni/agent-harness'
 
-skillInvocation('claude-code', { plugin: 'my-plugin', skill: 'review' }).text // '/my-plugin:review'
-skillInvocation('copilot-cli', { plugin: 'my-plugin', skill: 'review' }).text // '/review'
-skillInvocation('codex', { plugin: 'my-plugin', skill: 'review' }).text // '$review'
+skillInvocation('claude-code', { plugin: 'my-plugin', skill: 'review' })?.text // '/my-plugin:review'
+skillInvocation('copilot-cli', { plugin: 'my-plugin', skill: 'review' })?.text // '/review'
+skillInvocation('codex', { plugin: 'my-plugin', skill: 'review' })?.text // '$review'
+skillInvocation('gemini-cli', { plugin: 'my-plugin', skill: 'review' }) // undefined: the model loads skills itself
 
 supportsPluginDependencies('claude-code') // true; false for the others
 ```
