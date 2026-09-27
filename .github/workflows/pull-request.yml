@@ -4,6 +4,9 @@ on:
     types: [opened, synchronize]
   merge_group:
 
+permissions:
+  contents: read
+
 jobs:
   code:
     uses: cyberuni/.github/.github/workflows/pnpm-verify.yml@main
