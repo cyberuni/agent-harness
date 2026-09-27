@@ -57,7 +57,10 @@ carries any policy key wins outright (E-CC-M1, E-CC-M4, E-CC-M6). The Windows fi
 
 Cursor's terminal page documents `CURSOR_AGENT` as the way for a shell config to detect Cursor
 (E-CUR-D1). The CLI bundle sets it to `1` for commands the agent runs, and a headless run confirmed
-it (E-CUR-D2). The page does not say whether the IDE agent sets it as well. The lead that
+it (E-CUR-D2). The page does not say whether the IDE agent sets it as well, so the IDE's shipped
+code was read next. It sets `CURSOR_AGENT:"1"` on the terminals its agent opens, alongside settings
+that stop commands waiting for input, and in the extension host's base environment for agent shell
+commands (E-CUR-D11). The IDE's MCP process does not set it (E-CUR-D12). The lead that
 `CURSOR_TRACE_ID` marks the IDE terminal had no source at all (E-CUR-D5).
 
 Hook commands get a separate, documented set: `CURSOR_PROJECT_DIR`, `CURSOR_VERSION`, and others,

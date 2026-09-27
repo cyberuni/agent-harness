@@ -23,3 +23,10 @@ vendor sources:
 
 Added E-COPILOT-S6, GitHub's own statement that a skill is invoked by its name after a forward
 slash, so the `/<skill>` form in R4 no longer rests on the `skill list` output alone.
+
+## 2026-09-26 — Cursor IDE agent
+
+Read the Cursor IDE's shipped code (3.18.9) to settle whether its agent sets `CURSOR_AGENT=1`. It
+does, on agent terminals and agent shell commands (E-CUR-D11). The IDE's MCP servers do not get it,
+and only the CLI exports `CURSOR_INVOKED_AS` (E-CUR-D12). Detection needs no change: both report
+`cursor`. The open question is narrowed to confirming this in a live IDE session.

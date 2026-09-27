@@ -25,7 +25,7 @@ present.
 | Harness | Accept as detection | Contexts | Confidence | Evidence |
 | --- | --- | --- | --- | --- |
 | Claude Code | `CLAUDECODE=1` **and** either `CLAUDE_CODE_CHILD_SESSION=1` or `CLAUDE_CODE_SESSION_ID` set | Bash/PowerShell/Monitor tools, hooks, status line (child session); stdio MCP servers (session id) | High | E-CC-D1, E-CC-D3, E-CC-D6 |
-| Cursor | `CURSOR_AGENT=1` | Terminal commands the agent runs | High for the variable; the vendor page does not split IDE from CLI, and only the CLI was observed | E-CUR-D1, E-CUR-D2 |
+| Cursor | `CURSOR_AGENT=1` | Terminal commands the agent runs, in both the IDE and the `cursor-agent` CLI | High for the CLI (observed); Medium for the IDE (read from its code) | E-CUR-D1, E-CUR-D2, E-CUR-D11 |
 | Cursor (hooks) | `CURSOR_VERSION` and `CURSOR_PROJECT_DIR` both set | Hook commands | High | E-CUR-D10 |
 | Codex | `CODEX_THREAD_ID` set | Shell tool commands; injected even under a restrictive shell env policy | High (source read, undocumented on the docs site) | E-CODEX-D2 |
 | Copilot CLI | `COPILOT_CLI=1`, or `COPILOT_AGENT_SESSION_ID` set | Shell commands (and git hooks they trigger); MCP servers | High (vendor changelog) | E-COPILOT-D1, E-COPILOT-D2 |
@@ -44,7 +44,10 @@ Signals to **reject** as proof:
 - `COPILOT_HOME`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`, `CURSOR_CONFIG_DIR`. These are user settings.
 
 **Not detectable by environment:** Codex hook commands, which receive only the plugin-root
-variables (E-CODEX-D11).
+variables (E-CODEX-D11), and MCP servers started by the Cursor IDE (E-CUR-D12).
+
+**IDE or CLI, for Cursor:** both set `CURSOR_AGENT=1`. Only the CLI's launcher exports
+`CURSOR_INVOKED_AS`, so `CURSOR_AGENT=1` without it points to the IDE (E-CUR-D4, E-CUR-D12, Medium).
 
 ## R2. Plugin storage and enabled plugins
 
@@ -98,8 +101,8 @@ Copilot CLI's manifest reference (E-COPILOT-X1) have no such field.
 
 ## Open questions
 
-- Whether the Cursor **IDE** agent sets `CURSOR_AGENT=1` as the CLI does. The vendor page implies it
-  but was not observed.
+- Whether an environment printed from a real Cursor IDE agent session matches its code (E-CUR-D11).
+  Running `env | cut -d= -f1 | sort` from the IDE's agent chat would settle it.
 - How Claude Code merges `enabledPlugins` across scopes, and how Copilot CLI ranks `.claude/`
   settings against `.github/copilot/` settings.
 - Whether Cursor persists a per-plugin enabled state anywhere.
