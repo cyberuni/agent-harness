@@ -19,10 +19,14 @@ export interface SkillInvocation {
 /**
  * How a user invokes a plugin's skill in a harness.
  *
- * Only Claude Code namespaces by plugin; elsewhere two plugins' skills with the same name collide
- * (Copilot CLI keeps the first one it finds).
+ * Claude Code and Copilot in VS Code namespace by plugin; elsewhere two plugins' skills with the
+ * same name collide (Copilot CLI keeps the first one it finds).
+ *
+ * Returns `undefined` for OpenCode, Kilo Code, Gemini CLI, and Qwen Code, which document no typed
+ * form: the model loads a skill through a tool call when its description matches the task
+ * (E-OC-S2, E-KILO-S2, E-GEM-S2, E-QWEN-S1).
  */
-export function skillInvocation(harness: HarnessId, { plugin, skill }: PluginSkill): SkillInvocation {
+export function skillInvocation(harness: HarnessId, { plugin, skill }: PluginSkill): SkillInvocation | undefined {
 	switch (harness) {
 		case 'claude-code':
 			return { text: `/${plugin}:${skill}`, namespaced: true, research: 'E-CC-S1' }
@@ -32,5 +36,14 @@ export function skillInvocation(harness: HarnessId, { plugin, skill }: PluginSki
 			return { text: `$${skill}`, namespaced: false, research: 'E-CODEX-S1' }
 		case 'copilot-cli':
 			return { text: `/${skill}`, namespaced: false, research: 'E-COPILOT-S6' }
+		case 'vscode-copilot':
+			return { text: `/${plugin}:${skill}`, namespaced: true, research: 'E-VSC-S1' }
+		case 'cline':
+			return { text: `/${skill}`, namespaced: false, research: 'E-CLINE-S2' }
+		case 'opencode':
+		case 'kilo':
+		case 'gemini-cli':
+		case 'qwen-code':
+			return undefined
 	}
 }

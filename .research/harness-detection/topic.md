@@ -111,6 +111,80 @@ values win per plugin (E-COPILOT-P4, E-COPILOT-M4). Plugins install under
 `~/.copilot/installed-plugins/` (E-COPILOT-P9). Skills are a flat namespace: the first skill found
 with a given name wins, and project skills shadow plugin skills (E-COPILOT-S2, E-COPILOT-S5).
 
+## Wave 1 of #6
+
+Issue [#6](https://github.com/cyberuni/agent-harness/issues/6) listed six more harnesses, with
+detection leads from an unsourced survey and from `vercel-labs/skills`. Each lead was treated as
+unverified. On 2026-09-26 each harness was read from its source at a pinned commit, plus in-repo or
+vendor docs, one investigation per pair of related harnesses. None of the six CLIs was installed on
+the test machine, so no environment was dumped; every detection claim is a source read.
+
+### OpenCode and Kilo Code
+
+OpenCode's CLI middleware sets `AGENT=1`, `OPENCODE=1`, and `OPENCODE_PID` on its own process
+before any command runs. The shell tool and the local MCP launcher both copy `process.env` into the
+child, so all three reach the agent's commands and MCP servers (E-OC-D1, E-OC-D2, E-OC-D4).
+`AGENT=1` names no vendor.
+
+Kilo Code vendors OpenCode's source. Its middleware still sets `AGENT=1` and `OPENCODE=1`, but it
+sets `KILO_PID` instead of `OPENCODE_PID`, and it adds `KILO=1` (E-KILO-D1, E-KILO-D2). Its env
+builder strips only credentials, so these reach commands and MCP servers too (E-KILO-D3,
+E-KILO-D4). The lead was half right: Kilo does inherit `OPENCODE=1`, so `OPENCODE=1` alone would
+read Kilo as OpenCode. Requiring `OPENCODE_PID` for OpenCode, and `KILO=1` with `KILO_PID` for
+Kilo, keeps them apart without an ordering rule. Kilo started from an OpenCode shell still carries
+the outer `OPENCODE_PID`, which is nesting and stays `unknown`.
+
+Both keep plugins as JS/TS modules in a config folder or as npm packages named in config, with no
+manifest and no enabled record (E-OC-P2, E-OC-P3, E-KILO-P2, E-KILO-P3). Both have a managed config
+directory per OS and a macOS managed-preferences domain; Kilo renamed the directory but not the
+domain (E-OC-M1, E-KILO-M1, E-KILO-M2). Both load `SKILL.md` skills, but the model loads them
+through a tool, and neither documents a slash form (E-OC-S2, E-KILO-S2).
+
+### Gemini CLI and Qwen Code
+
+Gemini CLI sets `GEMINI_CLI=1` on shell tool commands and MCP stdio servers from one exported
+constant (E-GEM-D1, E-GEM-D2). Hooks get no identifying variable, only project-dir and session
+variables, one of them a `CLAUDE_PROJECT_DIR` alias (E-GEM-D3).
+
+Qwen Code renamed the variable to `QWEN_CODE=1` and set it on shell commands only. `GEMINI_CLI`
+appears nowhere in its source, so the lead that a fork carries its parent's variable does not hold
+here (E-QWEN-D1). The survey's warning that the value may be empty was wrong: it is `1`. Qwen also
+dropped the MCP-server variable (E-QWEN-D2).
+
+The first pass reported no override for the `.gemini` folder. A re-read found `GEMINI_CLI_HOME`,
+which replaces the home directory that holds `.gemini`, and `QWEN_HOME`, which replaces `.qwen`
+itself (E-GEM-P2, E-QWEN-P4). Extensions live in `extensions/` with a per-extension manifest, and
+`extension-enablement.json` records path-glob overrides rather than a boolean per extension
+(E-GEM-P1, E-GEM-P3). Skills are loaded by the model through a tool; `/skills` manages them
+(E-GEM-S2). The "system" settings file per OS, with an env override, is the managed layer
+(E-GEM-M1, E-QWEN-M1).
+
+### GitHub Copilot in VS Code
+
+The agent's terminal tool is in VS Code core. It sets `COPILOT_AGENT=1` on every terminal it
+creates, since PR #316267 in 1.121 (E-VSC-D1, E-VSC-D4). A later change added
+`AI_AGENT=github_copilot_vscode_agent`, and then set `AI_AGENT` on every agent session VS Code hosts,
+including external CLIs, so it cannot tell VS Code's own agent from Claude Code or Codex launched
+inside VS Code (E-VSC-D3, E-VSC-D5). The 1.121 release note calls the variable `VSCODE_AGENT`, a name
+that does not exist in source; the source wins (E-VSC-D6). VS Code never sets Copilot CLI's
+variables (E-VSC-D7).
+
+Skills are `/<skill>`, and a plugin's skills take the plugin name as a prefix (E-VSC-S1). Policy is
+the Windows registry, a macOS profile, and `/etc/vscode/policy.json` on Linux (E-VSC-M1–M3).
+
+### Cline
+
+The VS Code extension creates its terminals with `CLINE_ACTIVE=true`, in two places, and nowhere
+else in the repository (E-CLINE-D1–D3). The Cline CLI sets nothing of its own, so it cannot be
+detected (E-CLINE-D4). Skills are `/<skill>`, not namespaced (E-CLINE-S2). No local policy file is
+documented; enterprise settings come from the admin console (E-CLINE-M1).
+
+### Retirements
+
+Roo Code, Continue, Amazon Q Developer CLI, and Windsurf are gone or renamed, as the survey said
+(E-RET-R1, E-RET-R2, E-RET-R4, E-RET-R5). Aider is quiet, not discontinued: there is no vendor
+statement, only a stall in releases and commits (E-RET-R3).
+
 ## Cross-harness findings
 
 - **Compatibility aliases blur `CLAUDE_*` names.** Three harnesses pass `CLAUDE_PLUGIN_ROOT`,
@@ -119,4 +193,8 @@ with a given name wins, and project skills shadow plugin skills (E-COPILOT-S2, E
 - **Nesting is ambiguous.** Environment variables are inherited, so a shell under Codex that was
   started from Claude Code carries both harnesses' markers. Nothing in the environment says which is
   innermost. The honest answer is `unknown`, with both candidates in the evidence.
-- **Plugin dependencies are Claude Code only.** R5 is settled for all four.
+- **Plugin dependencies are Claude Code only.** R5 is settled for all ten.
+- **Forks keep some parent variables.** Kilo Code kept `OPENCODE=1`; Qwen Code renamed everything.
+  A parent's rule must rest on a variable its forks do not set.
+- **Cross-vendor variables are spreading.** `AGENT=1` and `AI_AGENT` announce that an agent is
+  running, not which. VS Code sets `AI_AGENT` for agents it merely hosts.

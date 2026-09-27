@@ -14,6 +14,7 @@ import {
 	normalizeGlobal,
 	ParseError,
 	parseUpstream,
+	upstreamName,
 } from './harness-drift.mjs'
 
 const script = join(dirname(fileURLToPath(import.meta.url)), 'harness-drift.mjs')
@@ -153,6 +154,19 @@ describe('compare', () => {
 		)
 	})
 
+	it('reports a change under github-copilot for both Copilot CLI and Copilot in VS Code', () => {
+		const upstream = structuredClone(baseline.agents)
+		upstream['github-copilot'].skillsDir = '.copilot/skills'
+		const findings = compare({ upstream, baseline, harnessIds: ['copilot-cli', 'vscode-copilot'] })
+		assert.deepEqual(
+			findings.map((f) => [f.kind, f.agent, f.harness]),
+			[
+				['project-dir-changed', 'github-copilot', 'copilot-cli'],
+				['project-dir-changed', 'github-copilot', 'vscode-copilot'],
+			],
+		)
+	})
+
 	it('reports a supported harness upstream does not list', () => {
 		const upstream = structuredClone(baseline.agents)
 		const findings = compare({ upstream, baseline, harnessIds: ['claude-code', 'opencode'] })
@@ -185,8 +199,8 @@ describe('cli', () => {
 		assert.match(result.stderr, /has no literal skillsDir/)
 	})
 
-	it('exits 0 when upstream matches the baseline and 1 on drift', () => {
-		const ids = ['claude-code', 'cursor', 'codex', 'github-copilot']
+	it('exits 0 when upstream matches the baseline and 1 on drift', async () => {
+		const ids = [...new Set((await loadHarnessIds()).map(upstreamName))]
 		const all = ids.map((id) => entry(id, '.agents/skills', "join(home, 'skills')"))
 		const upstream = join(dir, 'agents.ts')
 		const baseline = join(dir, 'baseline.json')

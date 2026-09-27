@@ -155,6 +155,87 @@ const rules: readonly DetectionRule[] = [
 			},
 		],
 	},
+	{
+		harness: 'opencode',
+		all: [
+			{
+				name: 'OPENCODE',
+				matches: isOne,
+				description:
+					'OpenCode sets OPENCODE=1 for shell tool commands and MCP servers; Kilo Code, its fork, sets it too',
+				research: 'E-OC-D1',
+			},
+			{
+				name: 'OPENCODE_PID',
+				matches: isSet,
+				description:
+					'OpenCode sets OPENCODE_PID for shell tool commands and MCP servers; Kilo Code sets KILO_PID instead',
+				research: 'E-OC-D2',
+			},
+		],
+	},
+	{
+		harness: 'kilo',
+		all: [
+			{
+				name: 'KILO',
+				matches: isOne,
+				description: 'Kilo Code sets KILO=1 for shell tool commands and MCP servers',
+				research: 'E-KILO-D2',
+			},
+			{
+				name: 'KILO_PID',
+				matches: isSet,
+				description: 'Kilo Code sets KILO_PID for shell tool commands and MCP servers',
+				research: 'E-KILO-D1',
+			},
+		],
+	},
+	{
+		harness: 'gemini-cli',
+		all: [
+			{
+				name: 'GEMINI_CLI',
+				matches: isOne,
+				description: 'Gemini CLI sets GEMINI_CLI=1 for shell tool commands and MCP stdio servers',
+				research: 'E-GEM-D1',
+			},
+		],
+	},
+	{
+		harness: 'qwen-code',
+		all: [
+			{
+				name: 'QWEN_CODE',
+				matches: isOne,
+				description: 'Qwen Code sets QWEN_CODE=1 for shell tool commands, not for MCP servers or hooks',
+				research: 'E-QWEN-D1',
+			},
+		],
+	},
+	{
+		harness: 'vscode-copilot',
+		all: [
+			{
+				name: 'COPILOT_AGENT',
+				matches: isOne,
+				description: 'VS Code 1.121+ sets COPILOT_AGENT=1 on terminals its Copilot agent runs commands in',
+				research: 'E-VSC-D1',
+			},
+		],
+	},
+	{
+		harness: 'cline',
+		all: [
+			{
+				name: 'CLINE_ACTIVE',
+				matches: (value) => value === 'true',
+				description:
+					"Cline's VS Code extension sets CLINE_ACTIVE=true on the terminals it creates; the Cline CLI does not",
+				research: 'E-CLINE-D1',
+			},
+		],
+	},
 ]
 
 /**

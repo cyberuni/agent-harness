@@ -87,4 +87,86 @@ describe('managedPolicyLocations', () => {
 			'C:\\PF\\GitHubCopilot\\managed-settings.json',
 		])
 	})
+
+	it('lists OpenCode managed preferences ahead of its managed config folder, and its remote config last', () => {
+		expect(managedPolicyLocations('opencode', { platform: 'darwin' }).map((l) => [l.kind, l.location])).toEqual([
+			['macos-managed-preferences', 'ai.opencode.managed'],
+			['directory', '/Library/Application Support/opencode'],
+			['server', 'Remote config at the organization domain /.well-known/opencode'],
+		])
+		expect(localPaths(managedPolicyLocations('opencode', { platform: 'linux' }))).toEqual(['/etc/opencode'])
+		expect(
+			localPaths(managedPolicyLocations('opencode', { platform: 'win32', env: { ProgramData: 'D:\\Data' } })),
+		).toEqual(['D:\\Data\\opencode'])
+	})
+
+	it("lists Kilo Code's renamed managed config folder beside OpenCode's unrenamed preference domain", () => {
+		expect(managedPolicyLocations('kilo', { platform: 'darwin' }).map((l) => [l.kind, l.location])).toEqual([
+			['macos-managed-preferences', 'ai.opencode.managed'],
+			['directory', '/Library/Application Support/kilo'],
+		])
+		expect(localPaths(managedPolicyLocations('kilo', { platform: 'linux' }))).toEqual(['/etc/kilo'])
+		expect(localPaths(managedPolicyLocations('kilo', { platform: 'win32', env: {} }))).toEqual([
+			'C:\\ProgramData\\kilo',
+		])
+	})
+
+	it('lists Gemini CLI system settings and system defaults, following their override variables', () => {
+		expect(localPaths(managedPolicyLocations('gemini-cli', { platform: 'linux', env: {} }))).toEqual([
+			'/etc/gemini-cli/settings.json',
+			'/etc/gemini-cli/system-defaults.json',
+		])
+		expect(localPaths(managedPolicyLocations('gemini-cli', { platform: 'darwin', env: {} }))).toEqual([
+			'/Library/Application Support/GeminiCli/settings.json',
+			'/Library/Application Support/GeminiCli/system-defaults.json',
+		])
+		expect(
+			localPaths(
+				managedPolicyLocations('gemini-cli', {
+					platform: 'linux',
+					env: { GEMINI_CLI_SYSTEM_SETTINGS_PATH: '/opt/policy/settings.json' },
+				}),
+			),
+		).toEqual(['/opt/policy/settings.json', '/opt/policy/system-defaults.json'])
+		expect(
+			localPaths(
+				managedPolicyLocations('gemini-cli', {
+					platform: 'win32',
+					env: { GEMINI_CLI_SYSTEM_DEFAULTS_PATH: 'D:\\defaults.json' },
+				}),
+			),
+		).toEqual(['C:\\ProgramData\\gemini-cli\\settings.json', 'D:\\defaults.json'])
+	})
+
+	it('lists Qwen Code system settings and system defaults under its own names', () => {
+		expect(localPaths(managedPolicyLocations('qwen-code', { platform: 'linux', env: {} }))).toEqual([
+			'/etc/qwen-code/settings.json',
+			'/etc/qwen-code/system-defaults.json',
+		])
+		expect(localPaths(managedPolicyLocations('qwen-code', { platform: 'win32', env: {} }))).toEqual([
+			'C:\\ProgramData\\qwen-code\\settings.json',
+			'C:\\ProgramData\\qwen-code\\system-defaults.json',
+		])
+		expect(
+			localPaths(
+				managedPolicyLocations('qwen-code', {
+					platform: 'darwin',
+					env: { QWEN_CODE_SYSTEM_SETTINGS_PATH: '/p/s.json' },
+				}),
+			),
+		).toEqual(['/p/s.json', '/p/system-defaults.json'])
+	})
+
+	it('lists VS Code policy locations for Copilot in VS Code', () => {
+		expect(managedPolicyLocations('vscode-copilot', { platform: 'linux' }).map((l) => [l.kind, l.location])).toEqual([
+			['file', '/etc/vscode/policy.json'],
+		])
+		expect(managedPolicyLocations('vscode-copilot', { platform: 'win32' }).map((l) => [l.kind, l.location])).toEqual([
+			['windows-registry', 'Software\\Policies\\Microsoft\\VSCode'],
+		])
+	})
+
+	it('lists only the server-side admin console for Cline', () => {
+		expect(managedPolicyLocations('cline', { platform: 'linux' }).map((l) => l.kind)).toEqual(['server'])
+	})
 })

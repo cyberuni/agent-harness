@@ -213,6 +213,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+/** A harness whose enabled plugins this package cannot read; `research` says why. */
+const unsupported = (...research: string[]): EnabledPluginsReader => ({
+	supported: false,
+	sources: [],
+	unread: [],
+	research,
+})
+
 type Reader = (environment: ResolvedHarnessEnvironment, managedSettingsPath: string | undefined) => EnabledPluginsReader
 
 const readers: Record<HarnessId, Reader> = {
@@ -234,7 +242,15 @@ const readers: Record<HarnessId, Reader> = {
 			research: ['E-CC-P3', 'E-CC-P7', 'E-CC-M1', 'E-CC-M6'],
 		}
 	},
-	cursor: () => ({ supported: false, sources: [], unread: [], research: [] }),
+	cursor: () => unsupported(),
+	// Loaded plugins are the ones present in a plugin folder or the config array (E-OC-P3, E-KILO-P3).
+	opencode: () => unsupported('E-OC-P3'),
+	kilo: () => unsupported('E-KILO-P3'),
+	// extension-enablement.json holds path-glob overrides, not a per-extension boolean (E-GEM-P3).
+	'gemini-cli': () => unsupported('E-GEM-P3'),
+	'qwen-code': () => unsupported('E-QWEN-P2'),
+	'vscode-copilot': () => unsupported('E-VSC-P4'),
+	cline: () => unsupported('E-CLINE-P4'),
 	codex: (environment) => {
 		const storage = pluginStorage('codex', environment)
 		return {

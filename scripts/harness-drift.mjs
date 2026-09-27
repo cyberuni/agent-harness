@@ -33,10 +33,10 @@ const PSEUDO_AGENTS = new Set(['universal'])
 
 /**
  * Upstream names a harness differently from `HarnessId` only where listed. Upstream's
- * `github-copilot` covers both Copilot CLI and VS Code's agent mode, so its directories are the
- * closest record of Copilot CLI's. An ID absent here is looked up under its own name.
+ * `github-copilot` covers both Copilot CLI and VS Code's agent mode, so both are tracked under it.
+ * An ID absent here is looked up under its own name.
  */
-export const UPSTREAM_NAMES = { 'copilot-cli': 'github-copilot' }
+export const UPSTREAM_NAMES = { 'copilot-cli': 'github-copilot', 'vscode-copilot': 'github-copilot' }
 
 export class ParseError extends Error {}
 
@@ -116,7 +116,9 @@ export function upstreamName(id) {
 
 export function compare({ upstream, baseline, harnessIds }) {
 	const findings = []
-	const supported = new Map(harnessIds.map((id) => [upstreamName(id), id]))
+	// One upstream agent can stand for more than one harness here.
+	const supported = new Map()
+	for (const id of harnessIds) supported.set(upstreamName(id), [...(supported.get(upstreamName(id)) ?? []), id])
 
 	for (const [agent, dirs] of Object.entries(upstream)) {
 		const previous = baseline.agents[agent]
@@ -128,22 +130,22 @@ export function compare({ upstream, baseline, harnessIds }) {
 			})
 			continue
 		}
-		const harness = supported.get(agent)
-		if (harness === undefined) continue
-		if (previous.skillsDir !== dirs.skillsDir)
-			findings.push({
-				kind: 'project-dir-changed',
-				agent,
-				harness,
-				detail: `skillsDir changed from \`${previous.skillsDir}\` to \`${dirs.skillsDir}\`.`,
-			})
-		if (previous.globalSkillsDir !== dirs.globalSkillsDir)
-			findings.push({
-				kind: 'global-dir-changed',
-				agent,
-				harness,
-				detail: `globalSkillsDir changed from \`${previous.globalSkillsDir}\` to \`${dirs.globalSkillsDir}\`.`,
-			})
+		for (const harness of supported.get(agent) ?? []) {
+			if (previous.skillsDir !== dirs.skillsDir)
+				findings.push({
+					kind: 'project-dir-changed',
+					agent,
+					harness,
+					detail: `skillsDir changed from \`${previous.skillsDir}\` to \`${dirs.skillsDir}\`.`,
+				})
+			if (previous.globalSkillsDir !== dirs.globalSkillsDir)
+				findings.push({
+					kind: 'global-dir-changed',
+					agent,
+					harness,
+					detail: `globalSkillsDir changed from \`${previous.globalSkillsDir}\` to \`${dirs.globalSkillsDir}\`.`,
+				})
+		}
 	}
 
 	for (const agent of Object.keys(baseline.agents)) {
@@ -151,8 +153,9 @@ export function compare({ upstream, baseline, harnessIds }) {
 			findings.push({ kind: 'agent-removed', agent, detail: 'Present in baseline, absent upstream.' })
 	}
 
-	for (const [agent, harness] of supported) {
-		if (upstream[agent] === undefined)
+	for (const [agent, harnesses] of supported) {
+		if (upstream[agent] !== undefined) continue
+		for (const harness of harnesses)
 			findings.push({
 				kind: 'supported-absent-upstream',
 				agent,
