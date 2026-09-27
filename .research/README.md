@@ -1,8 +1,8 @@
 # Research
 
-No topics yet. The first one will be `harness-detection`: how to identify which AI agent harness
-(Claude Code, Cursor, Codex, GitHub Copilot CLI) a process is running under, and where each one keeps
-its managed-policy locations, plugin storage, enabled plugins, and skill naming.
+| Topic | Question |
+| --- | --- |
+| [harness-detection](./harness-detection/conclusion.md) | How to identify which AI agent harness (Claude Code, Cursor, Codex, GitHub Copilot CLI) a process runs under, and where each keeps its managed policy, plugin storage, enabled plugins, and skill naming |
 
 Each topic under `.research/<topic-slug>/` holds four files: `conclusion.md` (the current best
 answer), `topic.md` (the full investigation), `evidence.md` (claims with source URLs and

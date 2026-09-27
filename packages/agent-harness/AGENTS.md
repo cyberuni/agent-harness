@@ -12,6 +12,6 @@ or `src/helpers/`.
 
 Any claim in this package's source or comments about what a harness does — a manifest path, a
 policy file location, a naming convention — must trace back to `.research/harness-detection` (or a
-later research topic that supersedes it). Do not encode a guess as a fact. Until that research
-lands, `detectHarness()` stays a stub that reports `unknown` rather than a detection this package
-has not verified.
+later research topic that supersedes it). Do not encode a guess as a fact. Each encoded fact names
+the evidence ID it rests on (for example `research: 'E-CC-D1'`), so a reviewer can check it against
+`evidence.md`. When a signal is ambiguous, report `unknown` rather than guess.

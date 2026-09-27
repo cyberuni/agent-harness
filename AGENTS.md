@@ -37,9 +37,8 @@ implementation instead of each re-detecting harnesses on their own.
 The library is published to npm from `packages/agent-harness` as `@cyberuni/agent-harness`. It will
 also ship as an agent plugin, like `universal-plugin` does for itself.
 
-The first real work on this repository is research, not code: see `.research/harness-detection`.
-Until that research lands, the library stays a minimal, honest stub — it must not claim to detect a
-harness it has not actually verified.
+Research comes before code: every harness fact the library encodes rests on
+`.research/harness-detection`. The library must not claim to detect a harness it has not verified.
 
 ## Where things live
 
