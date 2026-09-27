@@ -20,9 +20,9 @@ does managed policy live, how does it name plugin skills, and can plugins depend
 
 **Every harness checked marks the shell commands its agent runs with an environment variable of its
 own.** Most wave-1 variables are read from source rather than vendor docs. Detection by environment
-is reliable for commands the agent runs. It is weaker for hook scripts and MCP servers, and it cannot resolve nesting: a harness started from
-another harness's shell inherits the outer harness's variables, so the environment alone cannot say
-which one is innermost. A detector must report `unknown` when signals from two harnesses are
+is reliable for commands the agent runs. It is weaker for hook scripts and MCP servers, and it
+cannot resolve nesting: a harness started from another harness's shell inherits the outer harness's
+variables, so the environment alone cannot say which one is innermost. A detector must report `unknown` when signals from two harnesses are
 present.
 
 Forks inherit their parent's code, and with it some of the parent's variables. Kilo Code still sets
