@@ -11,6 +11,7 @@ import {
 	compare,
 	issueBody,
 	loadHarnessIds,
+	loadSkillsDirectories,
 	normalizeGlobal,
 	ParseError,
 	parseUpstream,
@@ -107,6 +108,12 @@ describe('harness IDs', () => {
 		assert.ok(ids.includes('claude-code'))
 	})
 
+	it('loads the recorded skill directories and leaves out unconfirmed harnesses', async () => {
+		const directories = await loadSkillsDirectories(['claude-code', 'crush'])
+		assert.deepEqual(Object.keys(directories), ['claude-code'])
+		assert.deepEqual(directories['claude-code'].project, ['.claude/skills'])
+	})
+
 	it('rejects a roster of the wrong shape', () => {
 		assert.throws(() => assertHarnessIds(undefined), ParseError)
 		assert.throws(() => assertHarnessIds([]), ParseError)
@@ -176,6 +183,39 @@ describe('compare', () => {
 		)
 	})
 
+	it('reports an upstream directory the recorded directories lack, for each harness under the agent', () => {
+		const upstream = structuredClone(baseline.agents)
+		const directories = {
+			'claude-code': { project: ['.claude/skills'], user: ['.claude/skills'], research: ['E-CC-L1'] },
+			'copilot-cli': { project: ['.github/skills'], user: ['.agents/skills'], research: ['E-COPILOT-S5'] },
+			'vscode-copilot': { project: ['.agents/skills'], user: ['.copilot/skills'], research: ['E-VSC-P1'] },
+		}
+		const findings = compare({
+			upstream,
+			baseline,
+			harnessIds: ['claude-code', 'copilot-cli', 'vscode-copilot'],
+			directories,
+		})
+		assert.deepEqual(
+			findings.map((f) => [f.kind, f.agent, f.harness]),
+			[
+				['project-dir-unrecorded', 'github-copilot', 'copilot-cli'],
+				['global-dir-unrecorded', 'github-copilot', 'copilot-cli'],
+			],
+		)
+		assert.match(findings[0].detail, /Upstream reads `\.agents\/skills`.*`\.github\/skills`.*`E-COPILOT-S5`/)
+		assert.match(findings[1].detail, /Upstream reads `~\/\.copilot\/skills`/)
+	})
+
+	it('compares a global directory only under {home}', () => {
+		const upstream = { 'claude-code': { skillsDir: '.claude/skills', globalSkillsDir: '{claudeHome}/skills' } }
+		const directories = { 'claude-code': { project: ['.claude/skills'], user: [], research: ['E-CC-L1'] } }
+		assert.deepEqual(
+			compare({ upstream, baseline: { agents: upstream }, harnessIds: ['claude-code'], directories }),
+			[],
+		)
+	})
+
 	it('states the blind spot in the issue body', () => {
 		const body = issueBody({
 			findings: [{ kind: 'new-agent', agent: 'kiro', detail: 'x' }],
@@ -200,8 +240,15 @@ describe('cli', () => {
 	})
 
 	it('exits 0 when upstream matches the baseline and 1 on drift', async () => {
-		const ids = [...new Set((await loadHarnessIds()).map(upstreamName))]
-		const all = ids.map((id) => entry(id, '.agents/skills', "join(home, 'skills')"))
+		const harnessIds = await loadHarnessIds()
+		const directories = await loadSkillsDirectories(harnessIds)
+		const agents = new Map()
+		for (const id of harnessIds) if (!agents.has(upstreamName(id))) agents.set(upstreamName(id), directories[id])
+		const all = [...agents].map(([agent, recorded]) =>
+			recorded
+				? entry(agent, recorded.project[0], `join(home, '${recorded.user[0]}')`)
+				: entry(agent, '.agents/skills', "join(home, 'skills')"),
+		)
 		const upstream = join(dir, 'agents.ts')
 		const baseline = join(dir, 'baseline.json')
 		writeFileSync(upstream, registry(...all))

@@ -135,6 +135,19 @@ skillInvocation('gemini-cli', { plugin: 'my-plugin', skill: 'review' }) // undef
 supportsPluginDependencies('claude-code') // true; false for the others
 ```
 
+## Skill directories
+
+```ts
+import { skillsDirectories } from '@cyberuni/agent-harness'
+
+skillsDirectories('claude-code') // { project: ['.claude/skills'], user: ['.claude/skills'], research: ['E-CC-L1'] }
+skillsDirectories('codex')?.project.includes('.agents/skills') // true
+skillsDirectories('kilo') // undefined: not confirmed
+```
+
+Project directories are relative to the project root, user directories to the home directory. Only
+directories read by default are listed; admin, bundled, and plugin skills are left out.
+
 ## Why this exists
 
 `universal-plugin`, `buddy-agent-harness`, `repobuddy`, and `cyberlegion/cyber-mux` each need to know

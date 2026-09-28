@@ -205,6 +205,31 @@ and Qwen Code extensions (E-GEM-P4, E-QWEN-P3), Copilot in VS Code (E-VSC-X1), C
 `peerDependencies` on host packages, E-CLINE-X1), Crush (no plugin system, E-CRUSH-X1), OpenHands
 (E-OH-X1), or the Auggie CLI (E-AUG-X1).
 
+## R6. Skill directories
+
+Where each harness reads skills by default. Project paths are relative to the project root, user
+paths to the home directory. Admin, bundled, and plugin skills are left out.
+
+| Harness | Project | User | Reads `.agents/skills`? | Evidence |
+| --- | --- | --- | --- | --- |
+| Claude Code | `.claude/skills` | `.claude/skills` | No | E-CC-L1 |
+| Cursor | `.agents/skills`, `.cursor/skills`, `.claude/skills`, `.codex/skills` | same | Yes | E-CUR-L1 |
+| Codex | `.agents/skills`, from the working directory up to the repository root | `.agents/skills` | Yes | E-CODEX-L1 |
+| Copilot CLI | `.github/skills`, `.agents/skills`, `.claude/skills` | `.copilot/skills`, `.agents/skills` | Yes | E-COPILOT-S5 |
+| Copilot in VS Code | `.github/skills`, `.claude/skills`, `.agents/skills` | `.copilot/skills`, `.claude/skills`, `.agents/skills` | Yes | E-VSC-P1 |
+| OpenCode | `.opencode/skills`, `.claude/skills`, `.agents/skills` | `.config/opencode/skills`, `.claude/skills`, `.agents/skills` | Yes | E-OC-S1 |
+| Gemini CLI | `.agents/skills`, `.gemini/skills` (the alias wins a name clash) | same | Yes | E-GEM-L1 |
+| Cline | `.cline/skills`, `.clinerules/skills`, `.claude/skills` | `.cline/skills` | No | E-CLINE-S1 |
+| Auggie CLI | `.augment/skills` | `.augment/skills` | No | E-AUG-S1 |
+| Kilo Code | Not confirmed: the documented `.agents/skills` is disputed on the vendor's tracker | — | Contested | E-KILO-L1 |
+| Qwen Code | Not confirmed: the source names the `.agents` root, not the directory under it | — | — | E-QWEN-S1 |
+| Crush, OpenHands | Not recorded | — | — | — |
+
+`vercel-labs/skills` records one project directory per agent and calls an agent universal when that
+one is `.agents/skills`. It lists Cline as universal, but Cline's docs name no `.agents/skills`
+path (E-CLINE-S1, re-checked 2026-09-28). The drift check reports that disagreement until the
+research settles it.
+
 ## Wave 2: no verified signal
 
 These harnesses are not detected. Each row says why, and whether a live `env` capture from a
