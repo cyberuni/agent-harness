@@ -261,6 +261,44 @@ variables a user sets. Amp's wrapper passes the environment through unchanged, a
 strings show no marker. Factory Droid's `FACTORY_ENV` reaches only the worker `droid` processes it
 spawns. The table in [conclusion.md](./conclusion.md) says which need a live `env` capture.
 
+### Live capture protocol (#33)
+
+A capture needs a person at a running, signed-in harness. An agent cannot capture one from inside
+another harness, because the child inherits the parent's variables (E-CODEX-D12). On 2026-09-28
+none of the nine harnesses could be run from the WSL machine this research uses: no CLI was
+installed, and Antigravity IDE and Warp were installed only as Windows GUI apps. The OpenHands CLI
+was captured the same day with a local mock LLM in place of a model account (E-OH-D9, E-OH-D10).
+
+Record variable names only, never values. For each harness:
+
+1. Start the harness from a fresh terminal that is not inside another agent. Run
+   `env | cut -d= -f1 | sort > baseline.txt` in that terminal first.
+2. Shell tool. Ask the agent to run `env | cut -d= -f1 | sort` and save the output as `shell.txt`.
+   For an IDE or terminal app (Antigravity, Kiro, Devin Desktop, Warp, Augment), also run the same
+   command yourself in that app's own terminal and save it as `typed.txt`. A variable in
+   `shell.txt` but not in `typed.txt` marks an agent-run command.
+3. Hooks, where the harness has them. Configure a hook whose command is
+   `sh -c 'env | cut -d= -f1 | sort > /tmp/hook-env.txt'`, and trigger it once.
+4. MCP servers, where the harness starts them. Add a stdio server whose command is
+   `sh -c 'env | cut -d= -f1 | sort > /tmp/mcp-env.txt; exec cat'`. The handshake fails, but the
+   file is written first.
+5. Compare each file with `baseline.txt` (`comm -13 baseline.txt shell.txt`). Record the added
+   names as a "Direct experiment" row in [evidence.md](./evidence.md), with the harness version,
+   the OS, and the context (shell, hook, or MCP).
+
+| Harness | Where to run it | Contexts to capture |
+| --- | --- | --- |
+| Antigravity IDE | Installed on the Windows host; use its agent panel | shell, typed |
+| Antigravity CLI (`agy`) | Not installed; install per `google-antigravity/antigravity-cli`. Check for `GEMINI_CLI` | shell, hook, MCP |
+| Rovo Dev CLI | Not installed; `acli rovodev` needs an Atlassian account | shell, MCP |
+| Kiro IDE and CLI | Not installed | shell, typed, hook, MCP |
+| Factory Droid | Not installed; `droid` needs a Factory account | shell, hook, MCP |
+| Devin Desktop | Not installed | shell, typed, MCP |
+| Warp (agent mode) | Installed on the Windows host; use agent mode | shell, typed |
+| Augment IDE extension | Not installed; runs in VS Code | shell, typed |
+| Amp | Not installed; needs an Amp account | shell, MCP |
+| OpenHands CLI binary | Captured: CLI 1.16.0 with a local mock LLM. Shell commands carry no `AI_AGENT`; hooks carry `OPENHANDS_*` (E-OH-D9, E-OH-D10) | done (shell, hook) |
+
 ## Cross-harness findings
 
 - **Compatibility aliases blur `CLAUDE_*` names.** Three harnesses pass `CLAUDE_PLUGIN_ROOT`,
