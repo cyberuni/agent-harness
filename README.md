@@ -42,6 +42,7 @@ For a known harness it also answers what that harness holds:
 | `managedPolicyLocations()` | Where managed policy lives: files, MDM domains, registry keys, servers |
 | `pluginStorage()` | Where installed plugins, marketplaces, and the enabled record live |
 | `enabledPlugins()` | Which plugins are enabled, resolved by scope precedence |
+| `installedPlugins()` | Which plugins are installed, and the folder each one loads from |
 | `skillInvocation()` | How a user types a plugin's skill, such as `/my-plugin:review` |
 | `supportsPluginDependencies()` | Whether a plugin can declare other plugins it depends on |
 | `skillsDirectories()` | Which project and user directories the harness reads skills from |
