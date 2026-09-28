@@ -60,3 +60,13 @@ in the conclusion. Corrections to the #6 leads:
 
 Corrected before commit: the hook-executor line anchor in E-OH-D4, and Factory Droid's npm package,
 which is `droid`, not `factory-cli`.
+
+## 2026-09-28 — skill directories (R6)
+
+Added where each harness reads skills (E-CC-L1, E-CUR-L1, E-CODEX-L1, E-GEM-L1, E-KILO-L1), for
+repobuddy/buddy-agent-harness#161, which moves its skills-path facts and its drift checks here.
+E-GEM-L1 supersedes E-GEM-S1 on the directories: Gemini CLI also reads the `.agents/skills` alias
+at both scopes, and the alias wins a name clash. E-KILO-L1 carries over buddy-agent-harness's
+E-KILO-01: the documented `.agents/skills` is disputed, so Kilo Code's directories stay unconfirmed.
+Re-checked Cline's docs: they still name no `.agents/skills` path, although `vercel-labs/skills`
+lists Cline as universal.
