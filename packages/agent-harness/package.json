@@ -1,6 +1,6 @@
 {
 	"name": "@cyberuni/agent-harness",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"description": "Detect which AI agent harness is running and query its managed-policy locations, plugin storage, enabled plugins, and skill naming.",
 	"keywords": [
 		"agent-harness",
