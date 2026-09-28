@@ -10,21 +10,23 @@ and every piece of evidence it returns names the research claim behind it.
 
 ## What each harness sets
 
-| Harness | Detected from | Where it is set |
-| --- | --- | --- |
-| Claude Code | `CLAUDECODE=1` with `CLAUDE_CODE_CHILD_SESSION=1` | Tool subprocesses, hooks, status line |
-| Claude Code | `CLAUDECODE=1` with `CLAUDE_CODE_SESSION_ID` | Also stdio MCP servers |
-| Cursor | `CURSOR_AGENT=1` | Terminal commands the agent runs |
-| Cursor | `CURSOR_VERSION` with `CURSOR_PROJECT_DIR` | Hook commands |
-| Codex | `CODEX_THREAD_ID` | Shell tool commands |
-| GitHub Copilot CLI | `COPILOT_CLI=1` or `COPILOT_AGENT_SESSION_ID` | Shell commands, MCP servers |
-| GitHub Copilot CLI | `COPILOT_PLUGIN_ROOT` | Plugin hooks |
-| OpenCode | `OPENCODE=1` with `OPENCODE_PID` | Shell tool commands, MCP servers |
-| Kilo Code | `KILO=1` with `KILO_PID` | Shell tool commands, MCP servers |
-| Gemini CLI | `GEMINI_CLI=1` | Shell tool commands, MCP servers |
-| Qwen Code | `QWEN_CODE=1` | Shell tool commands |
-| GitHub Copilot in VS Code | `COPILOT_AGENT=1` | Terminal commands the agent runs |
-| Cline | `CLINE_ACTIVE=true` | Terminal commands in the VS Code extension |
+A harness does not set the same variables everywhere it runs code. Your code can run in three
+places: a command the agent runs in a shell or terminal, a hook the harness fires, or an MCP server
+the harness starts. The table shows what identifies each harness in each place. A dash means no
+rule applies there, so detection reports `unknown`.
+
+| Harness | Commands the agent runs | Hooks | MCP servers |
+| --- | --- | --- | --- |
+| Claude Code | `CLAUDECODE=1` with `CLAUDE_CODE_CHILD_SESSION=1` or `CLAUDE_CODE_SESSION_ID` | Same as commands; also the status line | `CLAUDECODE=1` with `CLAUDE_CODE_SESSION_ID` (stdio servers) |
+| Cursor | `CURSOR_AGENT=1` | `CURSOR_VERSION` with `CURSOR_PROJECT_DIR` | — |
+| Codex | `CODEX_THREAD_ID` | — | — |
+| GitHub Copilot CLI | `COPILOT_CLI=1` or `COPILOT_AGENT_SESSION_ID` | `COPILOT_PLUGIN_ROOT` (plugin hooks) | `COPILOT_CLI=1` or `COPILOT_AGENT_SESSION_ID` |
+| OpenCode | `OPENCODE=1` with `OPENCODE_PID` | — | `OPENCODE=1` with `OPENCODE_PID` |
+| Kilo Code | `KILO=1` with `KILO_PID` | — | `KILO=1` with `KILO_PID` |
+| Gemini CLI | `GEMINI_CLI=1` | — | `GEMINI_CLI=1` |
+| Qwen Code | `QWEN_CODE=1` | — | — |
+| GitHub Copilot in VS Code | `COPILOT_AGENT=1` | — | — |
+| Cline | `CLINE_ACTIVE=true` (VS Code extension only) | — | — |
 
 ## When the answer is unknown
 
