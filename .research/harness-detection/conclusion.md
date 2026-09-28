@@ -2,8 +2,9 @@
 
 ## Last updated
 
-2026-09-27. Versions checked: Claude Code 2.1.283, cursor-agent 2026.07.01-41b2de7, codex-cli
-0.153.4 (source at openai/codex b8d5e3f), GitHub Copilot CLI 1.0.83.
+2026-09-28. Versions checked: Claude Code 2.1.283, cursor-agent 2026.07.01-41b2de7, codex-cli
+0.153.4 (source at openai/codex b8d5e3f, and rust-v0.153.4 for R7), GitHub Copilot CLI 1.0.83 (1.0.88
+for R7).
 
 Wave 1 of [#6](https://github.com/cyberuni/agent-harness/issues/6), also 2026-09-26, read from
 source at pinned commits: OpenCode (anomalyco/opencode b471c2b4), Kilo Code (Kilo-Org/kilocode
@@ -229,6 +230,30 @@ paths to the home directory. Admin, bundled, and plugin skills are left out.
 one is `.agents/skills`. It lists Cline as universal, but Cline's docs name no `.agents/skills`
 path (E-CLINE-S1, re-checked 2026-09-28). The drift check reports that disagreement until the
 research settles it.
+
+## R7. Installed plugin folders
+
+How to map an installed plugin to the folder it runs from.
+
+| Harness | Record | Folder | Evidence |
+| --- | --- | --- | --- |
+| Claude Code | `plugins/installed_plugins.json`: `plugin@marketplace` → `[{ scope, installPath, version, projectPath? }]` | `installPath` | E-CC-P2, E-CC-P6 |
+| Codex | None. Every `plugins/cache/<marketplace>/<plugin>/` with a valid version folder is installed | `local` if present, else the highest version (semver when both names parse, else string order) | E-CODEX-P3, E-CODEX-P8 |
+| Copilot CLI | `config.json` `installedPlugins`: `[{ name, marketplace, version, cache_path, enabled }]`; `marketplace` is `""` for a direct install | `cache_path` | E-COPILOT-P10, E-COPILOT-P11 |
+| Others | Not researched for an install record | — | — |
+
+Caveats:
+
+- Codex's version comparison is not a total order when one plugin's cache mixes semver and
+  non-semver folder names, so the folder Codex picks depends on its sort. This package reports such
+  a plugin as unresolved instead of guessing.
+- Codex counts a cached plugin as installed in its UI only when `config.toml` also configures it.
+  The cache alone is what `PluginStore::is_installed` checks (E-CODEX-P8).
+- Copilot CLI plugins from a marketplace added by local path are loaded in place and are not in
+  `config.json` (E-COPILOT-P12). Their folder is `<marketplace path>/<plugin source>`, read from the
+  marketplace catalog, which this package does not parse.
+- A Copilot CLI direct install has no `plugin@marketplace` key, so it cannot be joined with
+  `enabledPlugins` (E-COPILOT-P11).
 
 ## Wave 2: no verified signal
 

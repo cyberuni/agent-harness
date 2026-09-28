@@ -70,3 +70,11 @@ at both scopes, and the alias wins a name clash. E-KILO-L1 carries over buddy-ag
 E-KILO-01: the documented `.agents/skills` is disputed, so Kilo Code's directories stay unconfirmed.
 Re-checked Cline's docs: they still name no `.agents/skills` path, although `vercel-labs/skills`
 lists Cline as universal.
+
+## 2026-09-28 — installed plugin folders (R7)
+
+Added R7 for [#38](https://github.com/cyberuni/agent-harness/issues/38). Read Codex's active-version
+rule from source at rust-v0.153.4 (E-CODEX-P8). Installed a marketplace plugin, a direct plugin, and
+a local-marketplace plugin into scratch `COPILOT_HOME` folders with Copilot CLI 1.0.88 and recorded
+the `config.json` install record (E-COPILOT-P10–P12). E-COPILOT-P13 qualifies E-COPILOT-P2: the XDG
+split read from the bundle did not move a plugin install out of `~/.copilot`.
