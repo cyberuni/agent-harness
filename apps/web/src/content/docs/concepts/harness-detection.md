@@ -27,6 +27,9 @@ rule applies there, so detection reports `unknown`.
 | Qwen Code | `QWEN_CODE=1` | — | — |
 | GitHub Copilot in VS Code | `COPILOT_AGENT=1` | — | — |
 | Cline | `CLINE_ACTIVE=true` (VS Code extension only) | — | — |
+| Crush | `CRUSH=1` | `CRUSH=1` | — |
+| OpenHands | `AI_AGENT=openhands` | `AI_AGENT=openhands`, or `OPENHANDS_EVENT_TYPE` with `OPENHANDS_PROJECT_DIR` | — |
+| Auggie CLI | — | `AUGMENT_HOOK_EVENT` with `AUGMENT_PROJECT_DIR` | — |
 
 ## When the answer is unknown
 
@@ -37,14 +40,20 @@ The library reports `unknown` rather than guess:
 - **Borrowed names.** Codex, Copilot CLI, and Cursor pass `CLAUDE_PLUGIN_ROOT`,
   `CLAUDE_PLUGIN_DATA`, or `CLAUDE_PROJECT_DIR` to hooks for compatibility, so those names prove
   nothing.
-- **Shared names.** OpenCode and Kilo Code set `AGENT=1`, and VS Code and Claude Code set
-  `AI_AGENT`. These say that some agent is running, not which one.
+- **Shared names.** OpenCode and Kilo Code set `AGENT=1`, and VS Code, Claude Code, and Crush set
+  `AI_AGENT`. These say that some agent is running, not which one. The one exception is
+  `AI_AGENT=openhands`, a value no other harness uses. OpenHands fills it in only when `AI_AGENT` is
+  unset, so OpenHands started under another harness keeps the outer value and is seen only in its
+  hooks.
 - **Nested harnesses.** A harness started from another harness's shell inherits the outer
   harness's variables. With signals from two harnesses present, the environment cannot say which
   one is innermost. `candidates` lists both.
-- **Contexts with no marker of their own.** Codex, Gemini CLI, and Qwen Code hooks, Qwen Code MCP
-  servers, Copilot in VS Code hooks and MCP servers, and the Cline CLI carry no variable that names
-  the harness.
+- **Contexts with no marker of their own.** Codex, Gemini CLI, and Qwen Code hooks, Qwen Code,
+  Crush, OpenHands, and Auggie MCP servers, Auggie shell commands, Copilot in VS Code hooks and MCP
+  servers, and the Cline CLI carry no variable that names the harness.
+- **Harnesses with no verified signal.** Goose documents `GOOSE_TERMINAL=1`, but its shell tool
+  does not set it. Antigravity, Rovo Dev, Kiro, Amp, Factory Droid, Devin Desktop, and Warp have no
+  variable that could be verified from outside. The library does not detect them.
 
 ## Forks
 
@@ -61,6 +70,10 @@ The same research backs the harness queries:
   server-side sources for each harness.
 - `pluginStorage()` returns where plugins are installed and where the enabled record lives.
 - `enabledPlugins()` reads the enabled record for Claude Code, Codex, and Copilot CLI, and names
-  the policy sources it cannot read. The other harnesses keep no boolean record it can read.
+  the policy sources it cannot read. The other harnesses keep no record it can resolve: Auggie's
+  `enabledPlugins` merges only its `true` entries across scopes, and OpenHands keeps enabled state
+  in per-plugin install metadata.
 - `skillInvocation()` returns what a user types to run a plugin skill, or `undefined` where the
-  model loads skills itself: OpenCode, Kilo Code, Gemini CLI, and Qwen Code.
+  model loads skills itself: OpenCode, Kilo Code, Gemini CLI, Qwen Code, Crush, and OpenHands. It
+  also returns `undefined` for the Auggie CLI, where the typed form of a plugin skill is not
+  confirmed.

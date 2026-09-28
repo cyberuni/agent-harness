@@ -3,8 +3,9 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cyberuni/agent-harness/blob/main/LICENSE)
 
 Detect which AI agent harness is running — Claude Code, Cursor, Codex, GitHub Copilot CLI, OpenCode,
-Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, or Cline — and query what it holds: its managed-policy locations, plugin storage, enabled plugins, and how it names
-plugin skills.
+Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, Cline, Crush, OpenHands, or the Auggie
+CLI — and query what it holds: its managed-policy locations, plugin storage, enabled plugins, and
+how it names plugin skills.
 
 **Status: pre-release.** Every fact this library encodes rests on
 [`.research/harness-detection`](https://github.com/cyberuni/agent-harness/tree/main/.research/harness-detection).
@@ -39,16 +40,21 @@ Detection reads environment variables that each harness sets on the processes it
 | Qwen Code | `QWEN_CODE=1` |
 | GitHub Copilot in VS Code | `COPILOT_AGENT=1` |
 | Cline | `CLINE_ACTIVE=true`, set by the VS Code extension only |
+| Crush | `CRUSH=1` |
+| OpenHands | `AI_AGENT=openhands`, or `OPENHANDS_EVENT_TYPE` with `OPENHANDS_PROJECT_DIR` in hooks |
+| Auggie CLI | `AUGMENT_HOOK_EVENT` with `AUGMENT_PROJECT_DIR`, in hooks only |
 
 It reports `unknown` instead of guessing:
 
 - when no harness matches, including `CLAUDECODE=1` on its own, which IDE extensions also set;
 - when more than one harness matches, as when one harness runs inside another's shell. The matches
   are listed in `candidates`;
-- for `AGENT=1` and `AI_AGENT`, which several vendors set, and for `OPENCODE=1` alone, which Kilo
-  Code, an OpenCode fork, also sets;
+- for `AGENT` and `AI_AGENT`, which several vendors set (only the exact value `AI_AGENT=openhands`
+  counts), and for `OPENCODE=1` alone, which Kilo Code, an OpenCode fork, also sets;
 - in contexts where a harness sets nothing of its own: Codex, Gemini CLI, and Qwen Code hooks, Qwen
-  Code MCP servers, and the Cline CLI.
+  Code, Crush, OpenHands, and Auggie MCP servers, Auggie shell commands, and the Cline CLI;
+- for harnesses with no verified signal, such as Goose, Antigravity, Rovo Dev, Kiro, Amp, Factory
+  Droid, Devin Desktop, and Warp. The research records why for each one.
 
 Pass `{ env }` to inspect an environment other than `process.env`.
 
@@ -110,7 +116,7 @@ const result = await enabledPlugins('claude-code')
 | Claude Code | managed `managed-settings.json`, `.claude/settings.local.json`, `.claude/settings.json`, `<config dir>/settings.json` |
 | Codex | `<config dir>/config.toml` |
 | GitHub Copilot CLI | managed `managed-settings.json`, `.github/copilot/settings.local.json`, `.github/copilot/settings.json`, `<config dir>/settings.json` |
-| Cursor, OpenCode, Kilo Code, Gemini CLI, Qwen Code, Copilot in VS Code, Cline | none: `supported` is `false` |
+| Cursor, OpenCode, Kilo Code, Gemini CLI, Qwen Code, Copilot in VS Code, Cline, Crush, OpenHands, Auggie CLI | none: `supported` is `false` |
 
 Only plugins with an explicit entry are reported. A plugin with no entry falls back to a default
 this package does not know. When `unread` is not empty, MDM or server-managed policy can still
