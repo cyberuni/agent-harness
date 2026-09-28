@@ -187,6 +187,9 @@ importers:
       turbo:
         specifier: ^2.9.16
         version: 2.11.4
+      universal-plugin:
+        specifier: ^0.9.0
+        version: 0.9.0
 
   apps/web:
     dependencies:
@@ -1109,6 +1112,11 @@ packages:
     peerDependencies:
       '@biomejs/biome': '>= 2'
 
+  '@repobuddy/upx@0.1.1':
+    resolution: {integrity: sha512-WBLoxQFQN41VmhX/GZ5PNZl8G54VmUL1ovHO1/w5RqOxVSFyOd8RhXrIITq7SVnQMaWJE7GvCmHoDsV+tqf2Cw==}
+    engines: {node: '>=22'}
+    hasBin: true
+
   '@rolldown/binding-android-arm-eabi@1.2.11':
     resolution: {integrity: sha512-A5kXfGKvKWWZE0TtPrfsvT+q4Y5d1QG8gGUzpYjGydM+fARM9MuX90PrXYXe0XbsDVgyxxNzHo6giCj90bsFNw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -1246,6 +1254,9 @@ packages:
   '@simple-libs/stream-utils@2.0.0':
     resolution: {integrity: sha512-fCTuZK4QBa+39Oz9l4OGfJfz+GpwCp3AqO7Zch3to99xHPgstVsRFpeQ8LNd2o1Gv8raL2mCFwiaHh7bFSp5DQ==}
     engines: {node: '>=22'}
+
+  '@toon-format/toon@4.1.1':
+    resolution: {integrity: sha512-SGCkS7IjVpwRmGPgnY8ENKpAf0EdAnZDOQkvFW0d2cgOpdn9FEFl7sTgryESyypXrWr0YajHGpwsAUX4zw9ZvA==}
 
   '@turbo/darwin-64@2.11.4':
     resolution: {integrity: sha512-fEmcQVa95k79tZjcay5b2A4cpR/VrlNUki4AN7EbA+32vj5C5rBUE1q3i2yOFxsB2n01sOlzIZ+s2p2zADCTig==}
@@ -1782,6 +1793,10 @@ packages:
   commander@11.1.0:
     resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
     engines: {node: '>=16'}
+
+  commander@14.0.3:
+    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
+    engines: {node: '>=20'}
 
   common-ancestor-path@2.0.0:
     resolution: {integrity: sha512-dnN3ibLeoRf2HNC+OlCiNc5d2zxbLJXOtiZUudNFSXZrNSydxcCsSpRzXwfu7BBWCIfHPw+xTayeBvJCP/D8Ng==}
@@ -3008,6 +3023,11 @@ packages:
 
   unist-util-visit@5.1.0:
     resolution: {integrity: sha512-m+vIdyeCOpdr/QeQCu2EzxX/ohgS8KbnPDgFni4dQsfSCtpz8UqDyY5GjRru8PDKuYn7Fq19j1CQ+nJSsGKOzg==}
+
+  universal-plugin@0.9.0:
+    resolution: {integrity: sha512-WhAFut2LNPBR4dRgy030fWOaoa2FrcEw0pHSRzpGcGdctW7Y0y5wVEU+7zYK2QKwVubQ5OOkDvcM7SqtqJKHsA==}
+    engines: {node: '>=22'}
+    hasBin: true
 
   unstorage@1.17.5:
     resolution: {integrity: sha512-0i3iqvRfx29hkNntHyQvJTpf5W9dQ9ZadSoRU8+xVlhVtT7jAX57fazYO9EHvcRCfBCyi5YRya7XCDOsbTgkPg==}
@@ -4254,6 +4274,10 @@ snapshots:
     dependencies:
       '@biomejs/biome': 2.5.14
 
+  '@repobuddy/upx@0.1.1':
+    dependencies:
+      semver: 7.8.5
+
   '@rolldown/binding-android-arm-eabi@1.2.11':
     optional: true
 
@@ -4346,6 +4370,8 @@ snapshots:
       '@simple-libs/stream-utils': 2.0.0
 
   '@simple-libs/stream-utils@2.0.0': {}
+
+  '@toon-format/toon@4.1.1': {}
 
   '@turbo/darwin-64@2.11.4':
     optional: true
@@ -4829,6 +4855,8 @@ snapshots:
   comma-separated-tokens@2.0.3: {}
 
   commander@11.1.0: {}
+
+  commander@14.0.3: {}
 
   common-ancestor-path@2.0.0: {}
 
@@ -6620,6 +6648,13 @@ snapshots:
       '@types/unist': 3.0.3
       unist-util-is: 6.0.1
       unist-util-visit-parents: 6.0.2
+
+  universal-plugin@0.9.0:
+    dependencies:
+      '@repobuddy/upx': 0.1.1
+      '@toon-format/toon': 4.1.1
+      commander: 14.0.3
+      semver: 7.8.5
 
   unstorage@1.17.5:
     dependencies:

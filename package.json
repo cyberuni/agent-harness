@@ -12,9 +12,10 @@
 		"test": "turbo test",
 		"test:scripts": "node --test \"scripts/**/*.test.mjs\"",
 		"typecheck": "turbo typecheck",
+		"plugin:sync": "universal-plugin publish sync-version --root packages/agent-harness && universal-plugin plugin build --root packages/agent-harness && biome format --write packages/agent-harness",
 		"up": "pnpm --filter ./packages/agent-harness",
 		"verify": "turbo verify",
-		"version": "changeset version",
+		"version": "changeset version && pnpm plugin:sync",
 		"web": "pnpm --filter web"
 	},
 	"devDependencies": {
@@ -24,7 +25,8 @@
 		"@commitlint/config-conventional": "^21.0.2",
 		"@repobuddy/biome": "^2.3.1",
 		"husky": "^9.1.7",
-		"turbo": "^2.9.16"
+		"turbo": "^2.9.16",
+		"universal-plugin": "^0.9.0"
 	},
 	"packageManager": "pnpm@12.6.0+sha512.3ef68f951cb111ac204b4a5a16f0b2ddf0da56a96e0413e81d855d9f0b55ef926714709028e1cd00c405c2c5fb7b9e8ec4dc46777c805d0373c2f2ff00fd20ec",
 	"engines": {

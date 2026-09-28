@@ -33,8 +33,7 @@
 		"plugin.json",
 		".claude-plugin",
 		".cursor-plugin",
-		".codex-plugin",
-		"com.github.copilot"
+		".codex-plugin"
 	],
 	"scripts": {
 		"build": "tsdown",
