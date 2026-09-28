@@ -122,6 +122,38 @@ Only plugins with an explicit entry are reported. A plugin with no entry falls b
 this package does not know. When `unread` is not empty, MDM or server-managed policy can still
 override the answer.
 
+## Installed plugins
+
+```ts
+import { enabledPlugins, installedPlugins } from '@cyberuni/agent-harness'
+
+const installed = await installedPlugins('claude-code')
+// {
+//   harness: 'claude-code',
+//   supported: true,
+//   plugins: [{ id: 'my-plugin@my-marketplace', path: '/home/me/.claude/plugins/cache/my-marketplace/my-plugin/1.0.0', version: '1.0.0', scope: 'user', research: ['E-CC-P2'] }],
+//   unresolved: [],
+//   sources: [{ path: '/home/me/.claude/plugins/installed_plugins.json', found: true }],
+//   unread: [],
+//   research: ['E-CC-P2'],
+// }
+
+// The folder of each enabled plugin:
+const enabled = new Set((await enabledPlugins('claude-code')).plugins.filter((p) => p.enabled).map((p) => p.id))
+const folders = installed.plugins.filter((p) => enabled.has(p.id)).map((p) => p.path)
+```
+
+| Harness | Read from | Folder |
+| --- | --- | --- |
+| Claude Code | `<config dir>/plugins/installed_plugins.json` | `installPath`; one entry per scope a plugin is installed at |
+| Codex | `<config dir>/plugins/cache/<marketplace>/<plugin>/` | `local` if present, else the highest version, as Codex picks it |
+| GitHub Copilot CLI | `<config dir>/config.json` `installedPlugins` | `cache_path`; a direct install's `id` is its bare name |
+| Cursor, OpenCode, Kilo Code, Gemini CLI, Qwen Code, Copilot in VS Code, Cline, Crush, OpenHands, Auggie CLI | none: `supported` is `false` | — |
+
+`unresolved` lists Codex plugins whose cache mixes semver and non-semver version folders, where the
+folder Codex picks depends on its sort. Copilot CLI loads plugins from a marketplace added by local
+path in place, without an install record, so they appear in `unread` instead.
+
 ## Skill naming and plugin dependencies
 
 ```ts

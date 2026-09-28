@@ -22,6 +22,12 @@ export type {
 	PluginScope,
 } from './plugins/enabled-plugins.js'
 export { enabledPlugins } from './plugins/enabled-plugins.js'
+export type {
+	InstalledPlugin,
+	InstalledPluginSource,
+	InstalledPluginsResult,
+} from './plugins/installed-plugins.js'
+export { installedPlugins } from './plugins/installed-plugins.js'
 export { supportsPluginDependencies } from './plugins/plugin-dependencies.js'
 export type { PluginStorage, PluginStorageKind, PluginStorageLocation } from './plugins/plugin-storage.js'
 export { pluginStorage } from './plugins/plugin-storage.js'
