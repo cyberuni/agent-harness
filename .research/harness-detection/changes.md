@@ -78,3 +78,21 @@ rule from source at rust-v0.153.4 (E-CODEX-P8). Installed a marketplace plugin, 
 a local-marketplace plugin into scratch `COPILOT_HOME` folders with Copilot CLI 1.0.88 and recorded
 the `config.json` install record (E-COPILOT-P10–P12). E-COPILOT-P13 qualifies E-COPILOT-P2: the XDG
 split read from the bundle did not move a plugin install out of `~/.copilot`.
+
+## 2026-09-28 — R8 instruction files and the vendor-docs drift watch
+
+For [#36](https://github.com/cyberuni/agent-harness/issues/36). Added R8, the instruction files each
+harness reads, one row per harness from its vendor docs (E-CC-I1, E-CUR-I1, E-CODEX-I1,
+E-COPILOT-I1, E-VSC-I1, E-OC-I1, E-KILO-I1, E-GEM-I1, E-QWEN-I1, E-CLINE-I1, E-CRUSH-I1, E-OH-I1,
+E-AUG-I1). Kilo Code's and VS Code's pages were fetched from the docs source in the vendor's own
+repository, since their sites serve no markdown.
+
+E-OC-S1 now also cites the published opencode.ai skills page, which names the same directories as
+the pinned source it was read from.
+
+Re-checked Gemini CLI's skills page against the open registry finding: it names the `.agents/skills`
+alias for both tiers, so E-GEM-L1 stands and the finding is closed.
+
+The new drift watch surfaced two skills-axis disagreements, recorded under "Drift watch" in the
+conclusion and left open for research: the Auggie CLI and Kilo Code skills pages now name more
+directories than E-AUG-S1 and E-KILO-L1 record.

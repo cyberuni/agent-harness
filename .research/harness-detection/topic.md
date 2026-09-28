@@ -12,6 +12,8 @@ five research questions before any of it is coded:
 - R4. How each harness names a plugin skill.
 - R5. Whether plugins can depend on other plugins.
 - R6. Which directories each harness reads skills from, by default, at project and user scope.
+- R7. How to map an installed plugin to the folder it runs from.
+- R8. Which instruction files each harness reads, at project and user scope.
 
 The answer is in [conclusion.md](./conclusion.md). This file records how it was reached.
 

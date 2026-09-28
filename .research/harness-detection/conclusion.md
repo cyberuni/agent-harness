@@ -255,6 +255,48 @@ Caveats:
 - A Copilot CLI direct install has no `plugin@marketplace` key, so it cannot be joined with
   `enabledPlugins` (E-COPILOT-P11).
 
+Gemini CLI, which the registry lists with `skillsDir: '.agents/skills'`, agrees with its docs:
+workspace skills load from `.gemini/skills/` "or the `.agents/skills/` alias" (E-GEM-L1, re-checked
+2026-09-28). The earlier reading that it used `.gemini/skills` only is superseded.
+
+## R8. Instruction files
+
+Which instruction files each harness reads, per its vendor docs. User paths are relative to the home
+directory. This is the second axis the drift check watches; the library does not expose it yet.
+
+| Harness | Project | User | Reads `AGENTS.md`? | Evidence |
+| --- | --- | --- | --- | --- |
+| Claude Code | `CLAUDE.md` or `.claude/CLAUDE.md`, `CLAUDE.local.md` | `.claude/CLAUDE.md` | Yes, alone or alongside `CLAUDE.md` | E-CC-I1 |
+| Cursor | `.cursor/rules`, `AGENTS.md` (root and subdirectories) | Settings, no file | Yes | E-CUR-I1 |
+| Codex | `AGENTS.override.md`, else `AGENTS.md`, per directory from the root down | `.codex/AGENTS.md` (or `CODEX_HOME`) | Yes | E-CODEX-I1 |
+| Copilot CLI | `.github/copilot-instructions.md`, `.github/instructions/**/*.instructions.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` | `.copilot/copilot-instructions.md`, `.copilot/instructions` | Yes | E-COPILOT-I1 |
+| Copilot in VS Code | `.github/copilot-instructions.md`, `AGENTS.md`, `.github/instructions`, `CLAUDE.md`, `.claude/rules` | `.copilot/instructions`, `.claude/rules` | Yes | E-VSC-I1 |
+| OpenCode | `AGENTS.md`, else `CLAUDE.md` | `.config/opencode/AGENTS.md`, else `.claude/CLAUDE.md` | Yes | E-OC-I1 |
+| Kilo Code | `AGENTS.md`, else `AGENT.md` | — | Yes | E-KILO-I1 |
+| Gemini CLI | `GEMINI.md`, name set by `context.fileName` | `.gemini/GEMINI.md` | Not by default | E-GEM-I1 |
+| Qwen Code | `QWEN.md`, `.qwen/QWEN.local.md` | `.qwen/QWEN.md` | Yes | E-QWEN-I1 |
+| Cline | `.clinerules/` or `.cline/rules/`, `.cursorrules`, `.windsurfrules`, `AGENTS.md` | `.cline/rules`, `.agents/AGENTS.md` | Yes | E-CLINE-I1 |
+| Crush | Not stated beyond the file `crush` initializes (`AGENTS.md` by default) | `.config/crush/CRUSH.md`, `.config/AGENTS.md` | Globally | E-CRUSH-I1 |
+| OpenHands | `AGENTS.md`, also `CLAUDE.md` and `GEMINI.md` | — | Yes | E-OH-I1 |
+| Auggie CLI | `CLAUDE.md`, `AGENTS.md`, `.augment-guidelines`, `.augment/rules/` | `.augment/rules/` | Yes | E-AUG-I1 |
+
+## Drift watch
+
+`scripts/harness-drift.mjs` watches one primary vendor docs section per harness and axis, listed in
+`scripts/vendor-baseline.json` with the evidence ID and confidence each backs. A section that
+cannot be found or names no paths fails the run. The `vercel-labs/skills` registry stays in as
+corroboration. The skills baseline holds what the evidence records, so a path the docs add shows up
+as a finding until the research accepts it. On 2026-09-28 that is the case for two harnesses:
+
+- The Auggie CLI skills page now also names `.claude/skills` and `.agents/skills`, project and user,
+  while E-AUG-S1 and `skillsDirectories('augment')` record `.augment/skills` only.
+- The Kilo Code skills page now names `.kilo/skills`, `.claude/skills`, `.github/skills`, and
+  `.well-known/skills` besides `.agents/skills`, and user directories. E-KILO-L1 is still contested.
+
+A lead, not yet evidence: while finding the R8 pages, the Qwen Code, Crush, and OpenHands docs were
+seen to name skills directories, where `skillsDirectories()` returns `undefined`. Their skills pages
+are not watched until that is researched.
+
 ## Wave 2: no verified signal
 
 These harnesses are not detected. Each row says why, and whether a live `env` capture from a
