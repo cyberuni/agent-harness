@@ -96,3 +96,11 @@ alias for both tiers, so E-GEM-L1 stands and the finding is closed.
 The new drift watch surfaced two skills-axis disagreements, recorded under "Drift watch" in the
 conclusion and left open for research: the Auggie CLI and Kilo Code skills pages now name more
 directories than E-AUG-S1 and E-KILO-L1 record.
+
+## 2026-09-28 — live capture attempt for #33
+
+Tried to capture live environments for the nine harnesses in "Wave 2: no verified signal". None
+could be run from this research's WSL machine: no CLI was installed, and Antigravity IDE and Warp
+were installed only as Windows GUI apps, which an agent cannot drive. No evidence rows were added
+and no detection rule changed. Added a capture protocol to [topic.md](./topic.md) so a person at
+each harness can record a comparable capture.
