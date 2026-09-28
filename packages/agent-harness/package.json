@@ -13,7 +13,10 @@
 		"gemini-cli",
 		"qwen-code",
 		"vscode",
-		"cline"
+		"cline",
+		"crush",
+		"openhands",
+		"auggie"
 	],
 	"repository": {
 		"type": "git",
