@@ -1,0 +1,278 @@
+{
+	"reviewed": "2026-09-28",
+	"sources": [
+		{
+			"harness": "claude-code",
+			"axis": "skills",
+			"evidence": "E-CC-L1",
+			"confidence": "High — vendor doc, table rows",
+			"cited": "https://code.claude.com/docs/en/skills",
+			"url": "https://code.claude.com/docs/en/skills.md",
+			"section": "Create your first skill",
+			"paths": [".claude/skills", "~/.claude/skills"]
+		},
+		{
+			"harness": "claude-code",
+			"axis": "instructions",
+			"evidence": "E-CC-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://code.claude.com/docs/en/memory",
+			"url": "https://code.claude.com/docs/en/memory.md",
+			"section": "Choose where to put CLAUDE.md files",
+			"paths": [".claude/CLAUDE.md", "AGENTS.md", "CLAUDE.local.md", "CLAUDE.md", "~/.claude/CLAUDE.md"]
+		},
+		{
+			"harness": "cursor",
+			"axis": "skills",
+			"evidence": "E-CUR-L1",
+			"confidence": "High — vendor doc",
+			"cited": "https://cursor.com/docs/skills",
+			"url": "https://cursor.com/docs/skills.md",
+			"section": "Skill directories",
+			"paths": [
+				".agents/skills",
+				".claude/skills",
+				".codex/skills",
+				".cursor/skills",
+				"~/.agents/skills",
+				"~/.claude/skills",
+				"~/.codex/skills",
+				"~/.cursor/skills"
+			]
+		},
+		{
+			"harness": "cursor",
+			"axis": "instructions",
+			"evidence": "E-CUR-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://cursor.com/docs/rules",
+			"url": "https://cursor.com/docs/rules.md",
+			"section": "AGENTS.md",
+			"paths": [".cursor/rules", "AGENTS.md"]
+		},
+		{
+			"harness": "codex",
+			"axis": "skills",
+			"evidence": "E-CODEX-L1",
+			"confidence": "High — vendor doc",
+			"cited": "https://learn.chatgpt.com/docs/build-skills.md",
+			"url": "https://learn.chatgpt.com/docs/build-skills.md",
+			"section": "Where Codex loads local skills",
+			"paths": [".agents/skills", "~/.agents/skills"]
+		},
+		{
+			"harness": "codex",
+			"axis": "instructions",
+			"evidence": "E-CODEX-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+			"url": "https://learn.chatgpt.com/docs/agent-configuration/agents-md.md",
+			"section": "How Codex discovers guidance",
+			"paths": ["AGENTS.md", "AGENTS.override.md"]
+		},
+		{
+			"harness": "copilot-cli",
+			"axis": "skills",
+			"evidence": "E-COPILOT-S5",
+			"confidence": "High — vendor doc",
+			"cited": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference",
+			"url": "https://docs.github.com/api/article/body?pathname=/en/copilot/reference/copilot-cli-reference/cli-plugin-reference",
+			"section": "Loading order",
+			"paths": [".agents/skills", ".claude/skills", ".github/skills", "~/.agents/skills", "~/.copilot/skills"]
+		},
+		{
+			"harness": "copilot-cli",
+			"axis": "instructions",
+			"evidence": "E-COPILOT-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions",
+			"url": "https://docs.github.com/api/article/body?pathname=/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions",
+			"section": "Types of custom instructions",
+			"paths": [
+				"*.instructions.md",
+				".claude/CLAUDE.md",
+				".github/copilot-instructions.md",
+				".github/instructions",
+				"AGENTS.md",
+				"CLAUDE.md",
+				"GEMINI.md",
+				"~/.copilot/copilot-instructions.md",
+				"~/.copilot/instructions"
+			]
+		},
+		{
+			"harness": "vscode-copilot",
+			"axis": "skills",
+			"evidence": "E-VSC-P1",
+			"confidence": "High",
+			"cited": "https://code.visualstudio.com/docs/agent-customization/agent-skills",
+			"url": "https://raw.githubusercontent.com/microsoft/vscode-docs/main/docs/agent-customization/agent-skills.md",
+			"section": "Skill",
+			"paths": [
+				".agents/skills",
+				".claude/skills",
+				".github/skills",
+				"~/.agents/skills",
+				"~/.claude/skills",
+				"~/.copilot/skills"
+			]
+		},
+		{
+			"harness": "vscode-copilot",
+			"axis": "instructions",
+			"evidence": "E-VSC-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://code.visualstudio.com/docs/agent-customization/custom-instructions",
+			"url": "https://raw.githubusercontent.com/microsoft/vscode-docs/main/docs/agent-customization/custom-instructions.md",
+			"section": "Types of instruction files",
+			"paths": [
+				"*.instructions.md",
+				".claude/rules",
+				".github/copilot-instructions.md",
+				".github/instructions",
+				".instructions.md",
+				"AGENTS.md",
+				"CLAUDE.md",
+				"~/.claude/rules",
+				"~/.copilot/instructions"
+			]
+		},
+		{
+			"harness": "opencode",
+			"axis": "skills",
+			"evidence": "E-OC-S1",
+			"confidence": "High",
+			"cited": "https://opencode.ai/docs/skills",
+			"url": "https://opencode.ai/docs/skills.md",
+			"section": "Place files",
+			"paths": [
+				".agents/skills",
+				".claude/skills",
+				".opencode/skills",
+				"~/.agents/skills",
+				"~/.claude/skills",
+				"~/.config/opencode/skills"
+			]
+		},
+		{
+			"harness": "opencode",
+			"axis": "instructions",
+			"evidence": "E-OC-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://opencode.ai/docs/rules",
+			"url": "https://opencode.ai/docs/rules.md",
+			"section": "Types",
+			"paths": ["AGENTS.md", "CLAUDE.md", "~/.claude/CLAUDE.md", "~/.config/opencode/AGENTS.md"]
+		},
+		{
+			"harness": "kilo",
+			"axis": "skills",
+			"evidence": "E-KILO-L1",
+			"confidence": "Low — vendor doc disputed by vendor tracker; recorded by repobuddy/buddy-agent-harness E-KILO-01",
+			"cited": "https://kilo.ai/docs/customize/skills",
+			"url": "https://raw.githubusercontent.com/Kilo-Org/kilocode/main/packages/kilo-docs/pages/customize/skills.md",
+			"section": "Skill Locations",
+			"paths": [".agents/skills"]
+		},
+		{
+			"harness": "kilo",
+			"axis": "instructions",
+			"evidence": "E-KILO-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://kilo.ai/docs/customize/agents-md",
+			"url": "https://raw.githubusercontent.com/Kilo-Org/kilocode/main/packages/kilo-docs/pages/customize/agents-md.md",
+			"section": "File Location and Naming",
+			"paths": ["AGENT.md", "AGENTS.md", "README.md"]
+		},
+		{
+			"harness": "gemini-cli",
+			"axis": "skills",
+			"evidence": "E-GEM-L1",
+			"confidence": "High — vendor doc and source agree",
+			"cited": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md",
+			"url": "https://raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/cli/skills.md",
+			"section": "Discovery tiers",
+			"paths": [".agents/skills", ".gemini/skills", "~/.agents/skills", "~/.gemini/skills"]
+		},
+		{
+			"harness": "gemini-cli",
+			"axis": "instructions",
+			"evidence": "E-GEM-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md",
+			"url": "https://raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/cli/gemini-md.md",
+			"section": "Understand the context hierarchy",
+			"paths": ["GEMINI.md", "~/.gemini/GEMINI.md"]
+		},
+		{
+			"harness": "qwen-code",
+			"axis": "instructions",
+			"evidence": "E-QWEN-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/memory.md",
+			"url": "https://raw.githubusercontent.com/QwenLM/qwen-code/main/docs/users/features/memory.md",
+			"section": "Where to create QWEN.md",
+			"paths": [".qwen/QWEN.local.md", "AGENTS.md", "QWEN.md", "~/.qwen/QWEN.md"]
+		},
+		{
+			"harness": "cline",
+			"axis": "skills",
+			"evidence": "E-CLINE-S1",
+			"confidence": "High",
+			"cited": "https://docs.cline.bot/customization/skills",
+			"url": "https://docs.cline.bot/customization/skills.md",
+			"section": "Where Skills Live",
+			"paths": [".claude/skills", ".cline/skills", ".clinerules/skills", "~/.cline/skills"]
+		},
+		{
+			"harness": "cline",
+			"axis": "instructions",
+			"evidence": "E-CLINE-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://docs.cline.bot/features/cline-rules",
+			"url": "https://docs.cline.bot/features/cline-rules.md",
+			"section": "Where Rules Live",
+			"paths": [".cline/rules", ".clinerules", "~/.agents/AGENTS.md", "~/.cline/rules"]
+		},
+		{
+			"harness": "crush",
+			"axis": "instructions",
+			"evidence": "E-CRUSH-I1",
+			"confidence": "High — vendor doc (README)",
+			"cited": "https://github.com/charmbracelet/crush/blob/main/README.md",
+			"url": "https://raw.githubusercontent.com/charmbracelet/crush/main/README.md",
+			"section": "Global context files",
+			"paths": ["~/.config/AGENTS.md", "~/.config/crush/CRUSH.md"]
+		},
+		{
+			"harness": "openhands",
+			"axis": "instructions",
+			"evidence": "E-OH-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://docs.openhands.dev/overview/skills",
+			"url": "https://docs.openhands.dev/usage/prompting/microagents-overview.md",
+			"section": "Choose the Right Mechanism",
+			"paths": ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "SKILL.md"]
+		},
+		{
+			"harness": "augment",
+			"axis": "skills",
+			"evidence": "E-AUG-S1",
+			"confidence": "High — source + docs agree",
+			"cited": "https://docs.augmentcode.com/cli/skills.md",
+			"url": "https://docs.augmentcode.com/cli/skills.md",
+			"section": "Skill Locations",
+			"paths": [".augment/skills", "~/.augment/skills"]
+		},
+		{
+			"harness": "augment",
+			"axis": "instructions",
+			"evidence": "E-AUG-I1",
+			"confidence": "High — vendor doc",
+			"cited": "https://docs.augmentcode.com/cli/rules",
+			"url": "https://docs.augmentcode.com/cli/rules.md",
+			"section": "Supported Rules Files",
+			"paths": [".augment-guidelines", ".augment/rules", "AGENTS.md", "CLAUDE.md", "~/.augment/rules"]
+		}
+	]
+}

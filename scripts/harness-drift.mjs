@@ -2,10 +2,17 @@
 /**
  * Harness drift detector.
  *
- * Compares the `vercel-labs/skills` agent registry against a reviewed baseline, against the
- * harnesses this package supports, and against the skill directories it records for them. Upstream
- * records only skills directories, so a clean run says nothing about detection variables,
- * managed-policy locations, or plugin storage.
+ * Two inputs, reported per axis (`skills` or `instructions`):
+ *
+ * - Primary vendor documentation, per `vendor-baseline.json` (see `vendor-drift.mjs`). Each source
+ *   is a docs section for one harness and one axis, carrying the evidence ID and confidence of the
+ *   claim it backs.
+ * - The `vercel-labs/skills` agent registry, compared against `harness-baseline.json`, against the
+ *   harnesses this package supports, and against the skill directories it records. This is
+ *   corroboration only: a secondary source, on the skills axis alone.
+ *
+ * Neither input covers detection variables, managed-policy locations, or plugin storage, so a clean
+ * run says nothing about them.
  *
  * Usage:
  *   node scripts/harness-drift.mjs                   # human-readable report
@@ -13,18 +20,23 @@
  *   node scripts/harness-drift.mjs --issue-body      # markdown for a GitHub issue
  *   node scripts/harness-drift.mjs --update-baseline # accept current upstream as reviewed
  *   --upstream-file <path>                           # read upstream from disk instead of fetching
- *   --baseline <path>                                # use another baseline file
+ *   --baseline <path>                                # use another registry baseline file
+ *   --vendor-baseline <path>                         # use another vendor baseline file
  *
- * Exits 1 when drift is found, 0 when clean, 2 on a fetch or parse failure.
+ * Exits 1 when drift is found, 0 when clean, 2 on a fetch, parse, or extraction failure. A vendor
+ * page that no longer reads as it did is a failure, never a clean result.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
+import { acceptVendor, assertVendorBaseline, compareVendor, ExtractionError, readSources } from './vendor-drift.mjs'
+
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
 const defaultBaselinePath = join(here, 'harness-baseline.json')
+const defaultVendorBaselinePath = join(here, 'vendor-baseline.json')
 const harnessIdPath = join(root, 'packages', 'agent-harness', 'src', 'harness', 'harness-id.ts')
 const skillsDirectoriesPath = join(root, 'packages', 'agent-harness', 'src', 'skills', 'skills-directories.ts')
 
@@ -223,10 +235,14 @@ export function compare({ upstream, baseline, harnessIds, directories = {} }) {
 			})
 	}
 
-	return findings
+	return findings.map((finding) => ({ source: 'registry', axis: 'skills', ...finding }))
 }
 
 const TITLES = {
+	'vendor-path-added': 'Vendor docs name a new path',
+	'vendor-path-removed': 'Vendor docs no longer name a path',
+	'vendor-section-changed': 'Vendor docs section changed',
+	'recorded-dir-undocumented': 'Recorded skills directory no longer in the vendor docs',
 	'new-agent': 'New agents upstream',
 	'agent-removed': 'Agents removed upstream',
 	'project-dir-changed': 'Project skills directory changed for a supported harness',
@@ -236,39 +252,77 @@ const TITLES = {
 	'global-dir-unrecorded': 'Upstream global skills directory not recorded here',
 }
 
-export function issueBody({ findings, total, harnessIds }) {
-	const groups = findings.reduce((acc, finding) => {
-		;(acc[finding.kind] ??= []).push(finding)
+const AXIS_TITLES = { skills: 'Skills axis', instructions: 'Instructions axis' }
+
+function findingLine(finding) {
+	if (finding.source === 'vendor') {
+		const weak = finding.confidence.startsWith('High')
+			? ''
+			: ` The claim was already only ${finding.confidence.split(' ')[0]} confidence.`
+		return `- **${finding.harness}**: ${finding.detail} Backs \`${finding.evidence}\` (${finding.confidence.split(' ')[0]}), from <${finding.url}>.${weak}`
+	}
+	return `- **${finding.agent}**${finding.harness ? ` (\`${finding.harness}\`)` : ''}: ${finding.detail}`
+}
+
+function groupBy(items, key) {
+	return items.reduce((acc, item) => {
+		;(acc[key(item)] ??= []).push(item)
 		return acc
 	}, {})
+}
+
+export function issueBody({ findings, total, harnessIds, sources }) {
+	const byAxis = groupBy(findings, (finding) => finding.axis)
 	return [
-		`The [\`vercel-labs/skills\`](${UPSTREAM}) agent registry has drifted from our reviewed baseline.`,
+		'The harness drift check found changes against the reviewed baselines.',
 		'',
-		`Upstream now lists **${total}** agents. This package supports **${harnessIds.length}**: ${harnessIds.map((id) => `\`${id}\``).join(', ')}.`,
+		`It read **${sources}** vendor documentation sections for the **${harnessIds.length}** supported harnesses (${harnessIds.map((id) => `\`${id}\``).join(', ')}), and, as corroboration, the [\`vercel-labs/skills\`](${UPSTREAM}) registry of **${total}** agents.`,
 		'',
-		...Object.entries(groups).flatMap(([kind, items]) => [
-			`## ${TITLES[kind] ?? kind}`,
-			'',
-			...items.map((item) => `- **${item.agent}**${item.harness ? ` (\`${item.harness}\`)` : ''}: ${item.detail}`),
-			'',
-		]),
+		...['skills', 'instructions'].flatMap((axis) => {
+			const items = byAxis[axis] ?? []
+			if (items.length === 0) return [`## ${AXIS_TITLES[axis]}`, '', 'No change.', '']
+			const vendor = items.filter((item) => item.source === 'vendor')
+			const registry = items.filter((item) => item.source === 'registry')
+			return [
+				`## ${AXIS_TITLES[axis]}`,
+				'',
+				...Object.entries(groupBy(vendor, (item) => item.kind)).flatMap(([kind, group]) => [
+					`### ${TITLES[kind] ?? kind}`,
+					'',
+					...group.map(findingLine),
+					'',
+				]),
+				...(registry.length
+					? [
+							'### Corroboration: `vercel-labs/skills` registry',
+							'',
+							'A secondary source. It records one directory per scope and calls an agent universal when its',
+							'project directory is `.agents/skills`, so a mismatch is a prompt to research, not a verdict.',
+							'',
+							...Object.entries(groupBy(registry, (item) => item.kind)).flatMap(([kind, group]) => [
+								`#### ${TITLES[kind] ?? kind}`,
+								'',
+								...group.map(findingLine),
+								'',
+							]),
+						]
+					: []),
+			]
+		}),
 		'## What this does and does not tell you',
 		'',
-		'Upstream records a project and a global skills directory per agent, and nothing else. It has no',
-		'detection variables, managed-policy locations, or plugin storage, so a clean run does not mean',
-		'those facts are current.',
-		'',
-		'Upstream records one directory per scope and calls an agent universal when its project directory',
-		'is `.agents/skills`. A harness can read several directories, so a directory upstream names that',
-		'`skillsDirectories()` does not record is a prompt to research, not a verdict. Consumers such as',
-		'buddy-agent-harness decide their projections from `skillsDirectories()`.',
+		'The vendor sources cover skills directories and instruction files, and nothing else. Neither',
+		'input covers detection variables, managed-policy locations, or plugin storage, so a clean run',
+		'does not mean those facts are current.',
 		'',
 		'## Next',
 		'',
-		'Research each finding against primary vendor documentation, record the outcome in',
-		'`.research/harness-detection/`, then accept the new upstream state with',
-		'`node scripts/harness-drift.mjs --update-baseline`. The baseline does not clear a directory finding:',
-		'it clears when `skillsDirectories()` records the directory, or when upstream stops naming it.',
+		'This check proposes; it does not decide. Close each finding through the research loop (the',
+		'`harness-update` skill in repobuddy/buddy-agent-harness): verify it against the vendor, record',
+		'the outcome in `.research/harness-detection/`, update `skillsDirectories()` or the instruction',
+		'evidence it backs, then accept the new state with `node scripts/harness-drift.mjs --update-baseline`.',
+		'The baseline does not clear a directory finding (`recorded-dir-undocumented`,',
+		'`*-dir-unrecorded`): those clear only when `skillsDirectories()` agrees with the source.',
 		'',
 	].join('\n')
 }
@@ -281,9 +335,7 @@ function option(args, name) {
 async function readUpstream(args) {
 	const file = option(args, '--upstream-file')
 	if (file) return readFileSync(resolve(file), 'utf8')
-	const response = await fetch(UPSTREAM)
-	if (!response.ok) throw new Error(`HTTP ${response.status}`)
-	return response.text()
+	return fetchText(UPSTREAM)
 }
 
 function fail(message) {
@@ -291,9 +343,17 @@ function fail(message) {
 	process.exit(2)
 }
 
+async function fetchText(url) {
+	if (url.startsWith('file:')) return readFileSync(fileURLToPath(url), 'utf8')
+	const response = await fetch(url)
+	if (!response.ok) throw new Error(`HTTP ${response.status}`)
+	return response.text()
+}
+
 async function main() {
 	const args = process.argv.slice(2)
 	const baselinePath = resolve(option(args, '--baseline') ?? defaultBaselinePath)
+	const vendorBaselinePath = resolve(option(args, '--vendor-baseline') ?? defaultVendorBaselinePath)
 
 	let source
 	try {
@@ -305,35 +365,51 @@ async function main() {
 	let upstream
 	let harnessIds
 	let directories
+	let vendorBaseline
+	let readings
 	try {
 		upstream = parseUpstream(source)
 		harnessIds = await loadHarnessIds()
 		directories = await loadSkillsDirectories(harnessIds)
+		vendorBaseline = assertVendorBaseline(JSON.parse(readFileSync(vendorBaselinePath, 'utf8')))
+		readings = await readSources(vendorBaseline, fetchText)
 	} catch (error) {
 		if (error instanceof ParseError) fail(`${error.message}; the source layout probably changed.`)
+		if (error instanceof ExtractionError) fail(`${error.message}; the vendor page probably changed its layout.`)
 		throw error
 	}
 
 	if (args.includes('--update-baseline')) {
-		const next = { source: UPSTREAM, reviewed: new Date().toISOString().slice(0, 10), agents: upstream }
+		const reviewed = new Date().toISOString().slice(0, 10)
+		const next = { source: UPSTREAM, reviewed, agents: upstream }
 		writeFileSync(baselinePath, `${JSON.stringify(next, null, '\t')}\n`)
-		process.stdout.write(`Baseline updated: ${Object.keys(upstream).length} agents.\n`)
+		writeFileSync(
+			vendorBaselinePath,
+			`${JSON.stringify(acceptVendor(vendorBaseline, readings, reviewed), null, '\t')}\n`,
+		)
+		process.stdout.write(
+			`Baselines updated: ${Object.keys(upstream).length} agents, ${vendorBaseline.sources.length} vendor sources.\n`,
+		)
 		return
 	}
 
 	const baseline = JSON.parse(readFileSync(baselinePath, 'utf8'))
-	const findings = compare({ upstream, baseline, harnessIds, directories })
+	const findings = [
+		...compareVendor({ baseline: vendorBaseline, readings, directories }),
+		...compare({ upstream, baseline, harnessIds, directories }),
+	]
 	const total = Object.keys(upstream).length
+	const sources = vendorBaseline.sources.length
 
 	if (args.includes('--json')) {
-		process.stdout.write(`${JSON.stringify({ agents: total, supported: harnessIds, findings }, null, 2)}\n`)
+		process.stdout.write(`${JSON.stringify({ agents: total, sources, supported: harnessIds, findings }, null, 2)}\n`)
 	} else if (args.includes('--issue-body')) {
-		process.stdout.write(issueBody({ findings, total, harnessIds }))
+		process.stdout.write(issueBody({ findings, total, harnessIds, sources }))
 	} else {
 		process.stdout.write(
 			findings.length
-				? `${findings.length} finding(s):\n${findings.map((f) => `- [${f.kind}] ${f.agent}: ${f.detail}`).join('\n')}\n`
-				: `No drift. ${total} upstream agents; supported harnesses: ${harnessIds.join(', ')}.\n`,
+				? `${findings.length} finding(s):\n${findings.map((f) => `- [${f.axis}/${f.source}/${f.kind}] ${f.harness ?? f.agent}: ${f.detail}`).join('\n')}\n`
+				: `No drift. ${sources} vendor sources, ${total} upstream agents; supported harnesses: ${harnessIds.join(', ')}.\n`,
 		)
 	}
 

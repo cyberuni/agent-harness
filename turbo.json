@@ -24,7 +24,12 @@
 			"dependsOn": ["check", "build", "typecheck", "lint", "test", "//#test:scripts"]
 		},
 		"//#test:scripts": {
-			"inputs": ["scripts/**", "packages/agent-harness/src/harness/**"],
+			"inputs": [
+				"scripts/**",
+				"packages/agent-harness/src/harness/**",
+				"packages/agent-harness/src/skills/**",
+				".research/harness-detection/evidence.md"
+			],
 			"outputs": []
 		}
 	}
