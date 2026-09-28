@@ -251,6 +251,11 @@ const readers: Record<HarnessId, Reader> = {
 	'qwen-code': () => unsupported('E-QWEN-P2'),
 	'vscode-copilot': () => unsupported('E-VSC-P4'),
 	cline: () => unsupported('E-CLINE-P4'),
+	crush: () => unsupported('E-CRUSH-P2'),
+	// Enabled state sits in per-plugin install metadata keyed by name, not plugin@marketplace (E-OH-P4).
+	openhands: () => unsupported('E-OH-P4'),
+	// Auggie merges only the true entries across scopes, so a false entry never disables (E-AUG-P4).
+	augment: () => unsupported('E-AUG-P4'),
 	codex: (environment) => {
 		const storage = pluginStorage('codex', environment)
 		return {

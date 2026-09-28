@@ -169,4 +169,25 @@ describe('managedPolicyLocations', () => {
 	it('lists only the server-side admin console for Cline', () => {
 		expect(managedPolicyLocations('cline', { platform: 'linux' }).map((l) => l.kind)).toEqual(['server'])
 	})
+
+	it('lists the Crush system config outside Windows, and nothing on Windows', () => {
+		for (const platform of ['linux', 'darwin'] as const) {
+			expect(managedPolicyLocations('crush', { platform }).map((l) => [l.kind, l.location])).toEqual([
+				['file', '/etc/crush/crush.json'],
+			])
+		}
+		expect(managedPolicyLocations('crush', { platform: 'win32' })).toEqual([])
+	})
+
+	it('lists only server-side policy for OpenHands', () => {
+		expect(managedPolicyLocations('openhands', { platform: 'linux' }).map((l) => l.kind)).toEqual(['server'])
+	})
+
+	it('lists the Auggie system settings file per OS', () => {
+		const location = (platform: NodeJS.Platform, env = {}) =>
+			managedPolicyLocations('augment', { platform, env }).map((l) => [l.kind, l.location])
+		expect(location('linux')).toEqual([['file', '/etc/augment/settings.json']])
+		expect(location('darwin')).toEqual([['file', '/etc/augment/settings.json']])
+		expect(location('win32', { ProgramData: 'D:\\Data' })).toEqual([['file', 'D:\\Data\\augment\\settings.json']])
+	})
 })

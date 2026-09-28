@@ -329,4 +329,30 @@ const locators: Record<HarnessId, Locator> = {
 			research: 'E-CLINE-M1',
 		},
 	],
+	crush: (platform) =>
+		when(platform !== 'win32', {
+			kind: 'file',
+			location: '/etc/crush/crush.json',
+			description: 'System config; the lowest-ranked source, so user and project config override it',
+			research: 'E-CRUSH-M1',
+		}),
+	openhands: () => [
+		{
+			kind: 'server',
+			location: 'OpenHands Cloud or Enterprise deployment',
+			description: 'Organization controls held server-side; no local policy file is known',
+			research: 'E-OH-D8',
+		},
+	],
+	augment: (platform, env) => [
+		{
+			kind: 'file',
+			location:
+				platform === 'win32'
+					? win32.join(env.ProgramData || 'C:\\ProgramData', 'augment', 'settings.json')
+					: '/etc/augment/settings.json',
+			description: 'System settings, read from the Auggie CLI bundle; its rank against user settings is not documented',
+			research: 'E-AUG-M1',
+		},
+	],
 }
