@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import {
@@ -8,6 +7,7 @@ import {
 } from '../harness/harness-environment.js'
 import type { HarnessId } from '../harness/harness-id.js'
 import { type ManagedPolicyLocation, managedPolicyLocations } from '../managed-policy/managed-policy-locations.js'
+import { isRecord, readText, stripJsonComments } from './json-file.js'
 import { pluginStorage } from './plugin-storage.js'
 
 /** The settings scope a plugin's enabled state came from. */
@@ -115,16 +115,6 @@ export async function enabledPlugins(
 	}
 }
 
-/** Read a file, or `undefined` when it does not exist. Other read errors are thrown. */
-async function readText(path: string): Promise<string | undefined> {
-	try {
-		return await readFile(path, 'utf8')
-	} catch (error) {
-		if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
-		throw error
-	}
-}
-
 /** Read the `enabledPlugins` object of a JSON settings file, keeping boolean values only. */
 function jsonEnabledPlugins(text: string): Record<string, boolean> {
 	const settings: unknown = JSON.parse(text)
@@ -181,36 +171,8 @@ function managedFile(locations: readonly ManagedPolicyLocation[], name: string) 
 	return locations.find((l) => l.kind === 'file' && l.location.endsWith(name))?.location
 }
 
-/** Strip comments and trailing commas from JSON with comments, leaving string contents intact. */
-function stripJsonComments(text: string): string {
-	let out = ''
-	let i = 0
-	while (i < text.length) {
-		const char = text[i] as string
-		if (char === '"') {
-			let end = i + 1
-			while (end < text.length && text[end] !== '"') end += text[end] === '\\' ? 2 : 1
-			out += text.slice(i, end + 1)
-			i = end + 1
-		} else if (char === '/' && text[i + 1] === '/') {
-			while (i < text.length && text[i] !== '\n') i++
-		} else if (char === '/' && text[i + 1] === '*') {
-			const end = text.indexOf('*/', i + 2)
-			i = end === -1 ? text.length : end + 2
-		} else {
-			out += char
-			i++
-		}
-	}
-	return out.replace(/,(\s*[}\]])/g, '$1')
-}
-
 function jsoncEnabledPlugins(text: string): Record<string, boolean> {
 	return jsonEnabledPlugins(stripJsonComments(text))
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 /** A harness whose enabled plugins this package cannot read; `research` says why. */

@@ -73,6 +73,9 @@ The same research backs the harness queries:
   the policy sources it cannot read. The other harnesses keep no record it can resolve: Auggie's
   `enabledPlugins` merges only its `true` entries across scopes, and OpenHands keeps enabled state
   in per-plugin install metadata.
+- `installedPlugins()` maps each installed plugin to the folder it is loaded from, for Claude Code,
+  Codex, and Copilot CLI. Codex keeps no install record, so it applies Codex's own rule for which
+  cached version is active.
 - `skillInvocation()` returns what a user types to run a plugin skill, or `undefined` where the
   model loads skills itself: OpenCode, Kilo Code, Gemini CLI, Qwen Code, Crush, and OpenHands. It
   also returns `undefined` for the Auggie CLI, where the typed form of a plugin skill is not

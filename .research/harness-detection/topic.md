@@ -94,6 +94,12 @@ Enabled plugins are `[plugins."<plugin>@<marketplace>"]` tables in `config.toml`
 copied to `plugins/cache/` (E-CODEX-P2, E-CODEX-P3). Managed policy paths and the macOS preference
 domain are source constants (E-CODEX-M1–M6).
 
+Codex keeps no record of which cached version is installed. It picks one each time it loads a
+plugin: a `local` folder wins, otherwise the highest version, compared as semver when both names
+parse and as strings when they do not (E-CODEX-P8, read at rust-v0.153.4 for
+[#38](https://github.com/cyberuni/agent-harness/issues/38)). When a plugin's cache mixes semver and
+non-semver names, that comparison is not a total order, so the pick depends on the sort.
+
 ## GitHub Copilot CLI
 
 The first pass found `COPILOT_CLI` and `COPILOT_AGENT_SESSION_ID` in a live dump and called them
@@ -111,6 +117,13 @@ response.
 values win per plugin (E-COPILOT-P4, E-COPILOT-M4). Plugins install under
 `~/.copilot/installed-plugins/` (E-COPILOT-P9). Skills are a flat namespace: the first skill found
 with a given name wins, and project skills shadow plugin skills (E-COPILOT-S2, E-COPILOT-S5).
+
+For #38, a marketplace plugin and a direct plugin were installed into an empty `COPILOT_HOME` with
+Copilot CLI 1.0.88. `config.json` lists each under `installedPlugins` with an absolute `cache_path`;
+a direct install has an empty `marketplace` and is named by its bare name (E-COPILOT-P10,
+E-COPILOT-P11). A plugin from a marketplace added by local path is loaded in place and never
+reaches `config.json` (E-COPILOT-P12). Setting `XDG_CONFIG_HOME` and `XDG_STATE_HOME` did not move
+the install out of `~/.copilot`, despite the split read from the bundle (E-COPILOT-P13).
 
 ## Wave 1 of #6
 
