@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import {
 	assertHarnessIds,
@@ -216,20 +216,71 @@ describe('compare', () => {
 		)
 	})
 
-	it('states the blind spot in the issue body', () => {
+	it('labels registry findings as corroboration, per axis, and states the blind spot', () => {
 		const body = issueBody({
-			findings: [{ kind: 'new-agent', agent: 'kiro', detail: 'x' }],
+			findings: compare({
+				upstream: { ...structuredClone(baseline.agents), kiro: dirs('.kiro/skills', null) },
+				baseline,
+				harnessIds: ['claude-code'],
+			}),
 			total: 5,
 			harnessIds: ['claude-code'],
+			sources: 2,
 		})
-		assert.match(body, /## New agents upstream/)
-		assert.match(body, /no\s+detection variables, managed-policy locations, or plugin storage/)
+		assert.match(
+			body,
+			/## Skills axis\n\n### Corroboration: `vercel-labs\/skills` registry[\s\S]*#### New agents upstream/,
+		)
+		assert.match(body, /## Instructions axis\n\nNo change\./)
+		assert.match(body, /Neither\s+input covers detection variables, managed-policy locations, or plugin storage/)
+		assert.match(body, /This check proposes; it does not decide\./)
+	})
+
+	it('names the evidence and flags a claim that was already weak', () => {
+		const body = issueBody({
+			findings: [
+				{
+					source: 'vendor',
+					axis: 'instructions',
+					kind: 'vendor-path-added',
+					harness: 'kilo',
+					evidence: 'E-KILO-I1',
+					confidence: 'Medium — implied',
+					url: 'https://kilo.ai/docs',
+					detail: 'The docs now name `KILO.md`.',
+				},
+			],
+			total: 5,
+			harnessIds: ['kilo'],
+			sources: 1,
+		})
+		assert.match(body, /## Skills axis\n\nNo change\./)
+		assert.match(
+			body,
+			/## Instructions axis\n\n### Vendor docs name a new path\n\n- \*\*kilo\*\*: .*`E-KILO-I1` \(Medium\).*already only Medium confidence/,
+		)
 	})
 })
 
 describe('cli', () => {
 	const dir = mkdtempSync(join(tmpdir(), 'harness-drift-'))
-	const run = (...args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' })
+	const docs = join(dir, 'skills.md')
+	const vendorBaseline = join(dir, 'vendor-baseline.json')
+	const vendorSource = {
+		harness: 'claude-code',
+		axis: 'skills',
+		evidence: 'E-CC-L1',
+		confidence: 'High',
+		cited: 'https://code.claude.com/docs/en/skills',
+		url: pathToFileURL(docs).href,
+		section: 'Where skills load',
+		paths: ['.claude/skills', '~/.claude/skills'],
+	}
+	writeFileSync(docs, '## Where skills load\n\n`~/.claude/skills` and `.claude/skills`.\n')
+	writeFileSync(vendorBaseline, JSON.stringify({ reviewed: 'x', sources: [vendorSource] }))
+	// Every run reads the test's vendor baseline, so none fetches vendor pages or writes the real one.
+	const run = (...args) =>
+		spawnSync(process.execPath, [script, '--vendor-baseline', vendorBaseline, ...args], { encoding: 'utf8' })
 
 	it('exits 2 when the upstream shape outruns the parser', () => {
 		const upstream = join(dir, 'broken.ts')
@@ -262,5 +313,30 @@ describe('cli', () => {
 			JSON.parse(drift.stdout).findings.map((f) => f.kind),
 			['new-agent'],
 		)
+	})
+
+	it('exits 1 on vendor drift and 2 when a vendor page is restructured', async () => {
+		const harnessIds = await loadHarnessIds()
+		const agents = [...new Set(harnessIds.map(upstreamName))].map((agent) =>
+			entry(agent, '.agents/skills', "join(home, 'skills')"),
+		)
+		const upstream = join(dir, 'vendor-agents.ts')
+		const baseline = join(dir, 'vendor-registry-baseline.json')
+		writeFileSync(upstream, registry(...agents))
+		assert.equal(run('--upstream-file', upstream, '--baseline', baseline, '--update-baseline').status, 0)
+
+		writeFileSync(docs, '## Where skills load\n\n`~/.claude/skills`, `.claude/skills`, and `.agents/skills`.\n')
+		const drift = run('--upstream-file', upstream, '--baseline', baseline, '--json')
+		assert.equal(drift.status, 1, drift.stderr)
+		const vendor = JSON.parse(drift.stdout).findings.filter((f) => f.source === 'vendor')
+		assert.deepEqual(
+			vendor.map((f) => [f.kind, f.axis, f.path, f.evidence]),
+			[['vendor-path-added', 'skills', '.agents/skills', 'E-CC-L1']],
+		)
+
+		writeFileSync(docs, '## Skill locations\n\n`.claude/skills`\n')
+		const broken = run('--upstream-file', upstream, '--baseline', baseline)
+		assert.equal(broken.status, 2, broken.stderr)
+		assert.match(broken.stderr, /heading `Where skills load` not found/)
 	})
 })

@@ -44,7 +44,7 @@ jobs:
       - name: Fail on fetch or parse error
         if: steps.drift.outputs.changed != '0' && steps.drift.outputs.changed != '1'
         run: |
-          echo "::error::Could not fetch or parse the upstream agent registry or the harness roster."
+          echo "::error::Could not fetch or read a vendor docs page, the upstream agent registry, or the harness roster. A vendor page that changed its layout lands here; update its section in scripts/vendor-baseline.json after re-checking the research."
           exit 1
       - name: Print issue body (dry run)
         if: steps.drift.outputs.changed == '1' && inputs.dry_run == true
@@ -54,11 +54,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh label create harness-drift --color 0E8A16 --description "Upstream harness registry drift" 2>/dev/null || true
+          gh label create harness-drift --color 0E8A16 --description "Harness vendor docs or registry drift" 2>/dev/null || true
           if [ -n "$(gh issue list --label harness-drift --state open --json number --jq '.[].number')" ]; then
             echo "An open harness-drift issue already exists; skipping"
             exit 0
           fi
-          gh issue create --title "chore: upstream harness registry changed" \
+          gh issue create --title "chore: harness vendor docs or registry changed" \
             --label harness-drift \
             --body-file "$RUNNER_TEMP/issue-body.md"
