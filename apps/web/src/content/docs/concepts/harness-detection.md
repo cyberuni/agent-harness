@@ -28,7 +28,7 @@ rule applies there, so detection reports `unknown`.
 | GitHub Copilot in VS Code | `COPILOT_AGENT=1` | — | — |
 | Cline | `CLINE_ACTIVE=true` (VS Code extension only) | — | — |
 | Crush | `CRUSH=1` | `CRUSH=1` | — |
-| OpenHands | `AI_AGENT=openhands` | `AI_AGENT=openhands`, or `OPENHANDS_EVENT_TYPE` with `OPENHANDS_PROJECT_DIR` | — |
+| OpenHands | `AI_AGENT=openhands` (SDK 1.40.1 and later; not the OpenHands CLI 1.16.0) | `AI_AGENT=openhands`, or `OPENHANDS_EVENT_TYPE` with `OPENHANDS_PROJECT_DIR` | — |
 | Auggie CLI | — | `AUGMENT_HOOK_EVENT` with `AUGMENT_PROJECT_DIR` | — |
 
 ## When the answer is unknown
@@ -44,7 +44,8 @@ The library reports `unknown` rather than guess:
   `AI_AGENT`. These say that some agent is running, not which one. The one exception is
   `AI_AGENT=openhands`, a value no other harness uses. OpenHands fills it in only when `AI_AGENT` is
   unset, so OpenHands started under another harness keeps the outer value and is seen only in its
-  hooks.
+  hooks. The OpenHands CLI 1.16.0 bundles an SDK older than that variable, so it too is seen only in
+  its hooks.
 - **Nested harnesses.** A harness started from another harness's shell inherits the outer
   harness's variables. With signals from two harnesses present, the environment cannot say which
   one is innermost. `candidates` lists both.
