@@ -1,6 +1,7 @@
 import { posix, win32 } from 'node:path'
 
 import type { HarnessId } from '../harness/harness-id.js'
+import type { Platform } from '../harness/platform.js'
 
 /**
  * Where a piece of managed (organization-enforced) policy lives.
@@ -23,7 +24,7 @@ export interface ManagedPolicyLocation {
 
 export interface ManagedPolicyOptions {
 	/** Defaults to `process.platform`. */
-	readonly platform?: NodeJS.Platform
+	readonly platform?: Platform
 	/** Used for `%ProgramFiles%` / `%ProgramData%` on Windows. Defaults to `process.env`. */
 	readonly env?: Readonly<Record<string, string | undefined>>
 }
@@ -43,17 +44,17 @@ export function managedPolicyLocations(
 }
 
 type Env = Readonly<Record<string, string | undefined>>
-type Locator = (platform: NodeJS.Platform, env: Env) => ManagedPolicyLocation[]
+type Locator = (platform: Platform, env: Env) => ManagedPolicyLocation[]
 
-const joinFor = (platform: NodeJS.Platform) => (platform === 'win32' ? win32.join : posix.join)
-const dirnameFor = (platform: NodeJS.Platform) => (platform === 'win32' ? win32.dirname : posix.dirname)
+const joinFor = (platform: Platform) => (platform === 'win32' ? win32.join : posix.join)
+const dirnameFor = (platform: Platform) => (platform === 'win32' ? win32.dirname : posix.dirname)
 
 /**
  * OpenCode and Kilo Code: a managed config folder per OS, outranked by the macOS managed-preferences
  * domain, which Kilo Code did not rename (E-OC-M1, E-KILO-M2).
  */
 function opencodeFamily(
-	platform: NodeJS.Platform,
+	platform: Platform,
 	env: Env,
 	app: string,
 	research: { readonly directory: string; readonly preferences: string },
@@ -84,7 +85,7 @@ function opencodeFamily(
  * system-defaults file beside it that user settings override. Each path has an override variable.
  */
 function geminiFamily(
-	platform: NodeJS.Platform,
+	platform: Platform,
 	env: Env,
 	names: {
 		readonly settingsVariable: string

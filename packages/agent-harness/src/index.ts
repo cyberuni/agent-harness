@@ -7,6 +7,7 @@ export { detectHarness } from './detection/detect-harness.js'
 export type { HarnessEnvironment } from './harness/harness-environment.js'
 export type { HarnessId } from './harness/harness-id.js'
 export { harnessIds } from './harness/harness-id.js'
+export type { Platform } from './harness/platform.js'
 export type {
 	ManagedPolicyKind,
 	ManagedPolicyLocation,
