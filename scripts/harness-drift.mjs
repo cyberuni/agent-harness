@@ -2,9 +2,10 @@
 /**
  * Harness drift detector.
  *
- * Compares the `vercel-labs/skills` agent registry against a reviewed baseline and against the
- * harnesses this package supports. Upstream records only skills directories, so a clean run says
- * nothing about detection variables, managed-policy locations, or plugin storage.
+ * Compares the `vercel-labs/skills` agent registry against a reviewed baseline, against the
+ * harnesses this package supports, and against the skill directories it records for them. Upstream
+ * records only skills directories, so a clean run says nothing about detection variables,
+ * managed-policy locations, or plugin storage.
  *
  * Usage:
  *   node scripts/harness-drift.mjs                   # human-readable report
@@ -25,6 +26,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
 const defaultBaselinePath = join(here, 'harness-baseline.json')
 const harnessIdPath = join(root, 'packages', 'agent-harness', 'src', 'harness', 'harness-id.ts')
+const skillsDirectoriesPath = join(root, 'packages', 'agent-harness', 'src', 'skills', 'skills-directories.ts')
 
 export const UPSTREAM = 'https://raw.githubusercontent.com/vercel-labs/skills/main/src/agents.ts'
 
@@ -110,11 +112,61 @@ export async function loadHarnessIds(path = harnessIdPath) {
 	return assertHarnessIds(module.harnessIds)
 }
 
+/**
+ * Imports `skillsDirectories` from source, like the roster. A harness it returns `undefined` for is
+ * left out, so the directory checks skip it.
+ */
+export async function loadSkillsDirectories(harnessIds, path = skillsDirectoriesPath) {
+	let module
+	try {
+		module = await import(pathToFileURL(path).href)
+	} catch (error) {
+		throw new ParseError(`could not import ${path}: ${error.message}`)
+	}
+	if (typeof module.skillsDirectories !== 'function') throw new ParseError('`skillsDirectories` is not a function')
+	const directories = {}
+	for (const id of harnessIds) {
+		const recorded = module.skillsDirectories(id)
+		if (recorded !== undefined) directories[id] = recorded
+	}
+	return directories
+}
+
 export function upstreamName(id) {
 	return UPSTREAM_NAMES[id] ?? id
 }
 
-export function compare({ upstream, baseline, harnessIds }) {
+/**
+ * Upstream records one directory per scope; a harness may read several. So a directory upstream
+ * names that the recorded list lacks is a finding, and a recorded directory upstream omits is not.
+ * Only a global directory under `{home}` is compared: the other bases (`{configHome}`,
+ * `{claudeHome}`, `{codexHome}`) move with environment variables.
+ */
+function directoryFindings(agent, harness, dirs, recorded) {
+	const findings = []
+	if (!recorded.project.includes(dirs.skillsDir))
+		findings.push({
+			kind: 'project-dir-unrecorded',
+			agent,
+			harness,
+			detail: `Upstream reads \`${dirs.skillsDir}\`, but the recorded project directories are ${list(recorded.project)}. Check \`${recorded.research.join('`, `')}\` against the vendor.`,
+		})
+	const home = dirs.globalSkillsDir?.match(/^\{home\}\/(.+)$/)?.[1]
+	if (home !== undefined && !recorded.user.includes(home))
+		findings.push({
+			kind: 'global-dir-unrecorded',
+			agent,
+			harness,
+			detail: `Upstream reads \`~/${home}\`, but the recorded user directories are ${list(recorded.user)}. Check \`${recorded.research.join('`, `')}\` against the vendor.`,
+		})
+	return findings
+}
+
+function list(directories) {
+	return directories.map((directory) => `\`${directory}\``).join(', ')
+}
+
+export function compare({ upstream, baseline, harnessIds, directories = {} }) {
 	const findings = []
 	// One upstream agent can stand for more than one harness here.
 	const supported = new Map()
@@ -154,6 +206,13 @@ export function compare({ upstream, baseline, harnessIds }) {
 	}
 
 	for (const [agent, harnesses] of supported) {
+		if (upstream[agent] === undefined) continue
+		for (const harness of harnesses)
+			if (directories[harness])
+				findings.push(...directoryFindings(agent, harness, upstream[agent], directories[harness]))
+	}
+
+	for (const [agent, harnesses] of supported) {
 		if (upstream[agent] !== undefined) continue
 		for (const harness of harnesses)
 			findings.push({
@@ -173,6 +232,8 @@ const TITLES = {
 	'project-dir-changed': 'Project skills directory changed for a supported harness',
 	'global-dir-changed': 'Global skills directory changed for a supported harness',
 	'supported-absent-upstream': 'Supported harness missing upstream',
+	'project-dir-unrecorded': 'Upstream project skills directory not recorded here',
+	'global-dir-unrecorded': 'Upstream global skills directory not recorded here',
 }
 
 export function issueBody({ findings, total, harnessIds }) {
@@ -197,14 +258,17 @@ export function issueBody({ findings, total, harnessIds }) {
 		'detection variables, managed-policy locations, or plugin storage, so a clean run does not mean',
 		'those facts are current.',
 		'',
-		'This package holds no skills directories of its own, so the check compares the harness roster',
-		'against upstream and tracks directory changes for supported harnesses against the baseline only.',
+		'Upstream records one directory per scope and calls an agent universal when its project directory',
+		'is `.agents/skills`. A harness can read several directories, so a directory upstream names that',
+		'`skillsDirectories()` does not record is a prompt to research, not a verdict. Consumers such as',
+		'buddy-agent-harness decide their projections from `skillsDirectories()`.',
 		'',
 		'## Next',
 		'',
 		'Research each finding against primary vendor documentation, record the outcome in',
 		'`.research/harness-detection/`, then accept the new upstream state with',
-		'`node scripts/harness-drift.mjs --update-baseline`.',
+		'`node scripts/harness-drift.mjs --update-baseline`. The baseline does not clear a directory finding:',
+		'it clears when `skillsDirectories()` records the directory, or when upstream stops naming it.',
 		'',
 	].join('\n')
 }
@@ -240,9 +304,11 @@ async function main() {
 
 	let upstream
 	let harnessIds
+	let directories
 	try {
 		upstream = parseUpstream(source)
 		harnessIds = await loadHarnessIds()
+		directories = await loadSkillsDirectories(harnessIds)
 	} catch (error) {
 		if (error instanceof ParseError) fail(`${error.message}; the source layout probably changed.`)
 		throw error
@@ -256,7 +322,7 @@ async function main() {
 	}
 
 	const baseline = JSON.parse(readFileSync(baselinePath, 'utf8'))
-	const findings = compare({ upstream, baseline, harnessIds })
+	const findings = compare({ upstream, baseline, harnessIds, directories })
 	const total = Object.keys(upstream).length
 
 	if (args.includes('--json')) {
