@@ -13,3 +13,46 @@ hero:
       link: /agent-harness/concepts/harness-detection/
       icon: right-arrow
 ---
+
+import { Card, CardGrid } from '@astrojs/starlight/components'
+
+## Install
+
+```sh
+npm install @cyberuni/agent-harness
+```
+
+```ts
+import { detectHarness, skillsDirectories } from '@cyberuni/agent-harness'
+
+const { harness } = detectHarness() // 'claude-code', 'codex', …, or 'unknown'
+if (harness !== 'unknown') skillsDirectories(harness)
+```
+
+The package has no runtime dependencies.
+
+## What it answers
+
+<CardGrid>
+	<Card title="Which harness is running" icon="magnifier">
+		`detectHarness()` identifies 13 harnesses from the variables they set, and reports `unknown`
+		rather than guess.
+	</Card>
+	<Card title="Where policy lives" icon="setting">
+		`managedPolicyLocations()` lists managed-policy files, MDM domains, registry keys, and
+		server-side sources.
+	</Card>
+	<Card title="Which plugins are present" icon="puzzle">
+		`pluginStorage()`, `enabledPlugins()`, and `installedPlugins()` say where plugins live, which
+		are enabled, and which folder each one loads from.
+	</Card>
+	<Card title="How skills are named and found" icon="document">
+		`skillInvocation()` returns what a user types to run a plugin skill, and
+		`skillsDirectories()` where a harness reads skills from.
+	</Card>
+</CardGrid>
+
+Every answer rests on a vendor source recorded in
+[`.research/harness-detection`](https://github.com/cyberuni/agent-harness/tree/main/.research/harness-detection).
+The [package readme](https://github.com/cyberuni/agent-harness/tree/main/packages/agent-harness#readme)
+documents each function.

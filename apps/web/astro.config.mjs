@@ -9,7 +9,7 @@ export default defineConfig({
 		starlight({
 			title: 'agent-harness',
 			description:
-				'Detect which AI agent harness is running — Claude Code, Cursor, Codex, or Copilot CLI — and query what it holds.',
+				'Detect which AI agent harness is running, such as Claude Code, Cursor, Codex, or Copilot CLI, and query what it holds.',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/cyberuni/agent-harness' }],
 			sidebar: [
 				{
