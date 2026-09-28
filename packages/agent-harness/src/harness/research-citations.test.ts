@@ -21,7 +21,9 @@ describe('research citations', () => {
 		const cited = new Set<string>()
 		for (const file of await sourceFiles(srcDir)) {
 			const text = await readFile(file, 'utf8')
-			for (const match of text.matchAll(/\bE-(?:CC|CUR|CODEX|COPILOT|OC|KILO|GEM|QWEN|VSC|CLINE)-[A-Z]\d+\b/g))
+			for (const match of text.matchAll(
+				/\bE-(?:CC|CUR|CODEX|COPILOT|OC|KILO|GEM|QWEN|VSC|CLINE|CRUSH|OH|AUG)-[A-Z]\d+\b/g,
+			))
 				cited.add(match[0])
 		}
 

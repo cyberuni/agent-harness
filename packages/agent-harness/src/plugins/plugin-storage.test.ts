@@ -95,4 +95,32 @@ describe('pluginStorage', () => {
 			['installed-plugins', '/home/u/.cline/plugins/_installed'],
 		])
 	})
+
+	it('gives Crush a config dir but no plugin locations, since it has no plugin system', () => {
+		expect(pluginStorage('crush', { homedir: '/home/u', env: {} })).toEqual({
+			harness: 'crush',
+			configDir: '/home/u/.config/crush',
+			locations: [],
+		})
+		expect(pluginStorage('crush', { homedir: '/home/u', env: { XDG_CONFIG_HOME: '/x' } }).configDir).toBe('/x/crush')
+		expect(pluginStorage('crush', { homedir: '/home/u', env: { CRUSH_GLOBAL_CONFIG: '/c' } }).configDir).toBe('/c')
+	})
+
+	it('places OpenHands plugins under ~/.openhands/plugins/installed, or under OH_PERSISTENCE_DIR', () => {
+		expect(pathsOf(pluginStorage('openhands', { homedir: '/home/u', env: {} }))).toEqual([
+			['installed-plugins', '/home/u/.openhands/plugins/installed'],
+			['enabled-record', '/home/u/.openhands/plugins/installed/.installed.json'],
+		])
+		expect(pluginStorage('openhands', { homedir: '/home/u', env: { OH_PERSISTENCE_DIR: '/p' } }).configDir).toBe('/p')
+		expect(
+			pluginStorage('openhands', { homedir: '/home/u', env: { OPENHANDS_PERSISTENCE_DIR: '/cli' } }).configDir,
+		).toBe('/cli')
+	})
+
+	it('places Auggie marketplaces and settings under ~/.augment', () => {
+		expect(pathsOf(pluginStorage('augment', { homedir: '/home/u', env: {} }))).toEqual([
+			['marketplaces', '/home/u/.augment/plugins/marketplaces'],
+			['enabled-record', '/home/u/.augment/settings.json'],
+		])
+	})
 })

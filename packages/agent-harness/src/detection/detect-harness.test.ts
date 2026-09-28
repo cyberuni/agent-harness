@@ -108,6 +108,81 @@ describe('detectHarness', () => {
 		expect(result.evidence.map((e) => e.signal)).toEqual(['CLINE_ACTIVE'])
 	})
 
+	it('detects Crush from a bash tool or hook command', () => {
+		const result = detectHarness({ env: { CRUSH: '1', AGENT: 'crush', AI_AGENT: 'crush' } })
+
+		expect(result.harness).toBe('crush')
+		expect(result.evidence.map((e) => e.signal)).toEqual(['CRUSH'])
+	})
+
+	it('reports unknown for AGENT=crush and AI_AGENT=crush without CRUSH, since the names are shared', () => {
+		expect(detectHarness({ env: { AGENT: 'crush', AI_AGENT: 'crush' } })).toEqual({
+			harness: 'unknown',
+			evidence: [],
+			candidates: [],
+		})
+	})
+
+	it('reports unknown with both candidates when Crush runs inside OpenCode', () => {
+		const result = detectHarness({ env: { OPENCODE: '1', OPENCODE_PID: '4242', CRUSH: '1', AGENT: 'crush' } })
+
+		expect(result.harness).toBe('unknown')
+		expect(result.candidates).toEqual(['opencode', 'crush'])
+	})
+
+	it('detects OpenHands from a terminal tool command by the exact AI_AGENT value', () => {
+		const result = detectHarness({ env: { AI_AGENT: 'openhands' } })
+
+		expect(result.harness).toBe('openhands')
+		expect(result.evidence.map((e) => e.signal)).toEqual(['AI_AGENT'])
+	})
+
+	it('detects OpenHands from a hook command, even when an outer harness already set AI_AGENT', () => {
+		const result = detectHarness({
+			env: { AI_AGENT: 'something-else', OPENHANDS_EVENT_TYPE: 'PreToolUse', OPENHANDS_PROJECT_DIR: '/repo' },
+		})
+
+		expect(result.harness).toBe('openhands')
+	})
+
+	it('reports unknown with both candidates when OpenHands runs inside Claude Code and keeps its AI_AGENT', () => {
+		const result = detectHarness({
+			env: {
+				CLAUDECODE: '1',
+				CLAUDE_CODE_CHILD_SESSION: '1',
+				AI_AGENT: 'claude-code_2-1-283_agent',
+				OPENHANDS_EVENT_TYPE: 'Stop',
+				OPENHANDS_PROJECT_DIR: '/repo',
+			},
+		})
+
+		expect(result.harness).toBe('unknown')
+		expect(result.candidates).toEqual(['claude-code', 'openhands'])
+	})
+
+	it('detects the Auggie CLI from a hook command, ignoring its CLAUDE_PLUGIN_ROOT alias', () => {
+		const result = detectHarness({
+			env: {
+				AUGMENT_HOOK_EVENT: 'PreToolUse',
+				AUGMENT_PROJECT_DIR: '/repo',
+				AUGMENT_CONVERSATION_ID: 'c-1',
+				CLAUDE_PLUGIN_ROOT: '/p',
+				AUGMENT_PLUGIN_ROOT: '/p',
+			},
+		})
+
+		expect(result.harness).toBe('augment')
+		expect(result.evidence.map((e) => e.signal)).toEqual(['AUGMENT_HOOK_EVENT', 'AUGMENT_PROJECT_DIR'])
+	})
+
+	it('does not detect Goose, whose documented GOOSE_TERMINAL is not set on its shell tool', () => {
+		expect(detectHarness({ env: { GOOSE_TERMINAL: '1', AGENT: 'goose', AGENT_SESSION_ID: '20260217_5' } })).toEqual({
+			harness: 'unknown',
+			evidence: [],
+			candidates: [],
+		})
+	})
+
 	it('reports unknown for AGENT and AI_AGENT, which several vendors share', () => {
 		expect(detectHarness({ env: { AGENT: '1', AI_AGENT: 'github_copilot_vscode_agent' } })).toEqual({
 			harness: 'unknown',

@@ -270,4 +270,54 @@ const storages: Record<HarnessId, (environment: ResolvedHarnessEnvironment) => P
 			],
 		}
 	},
+	crush: ({ env, homedir }) => {
+		// Crush has no plugin system; it extends through MCP servers, skills, and hooks in crush.json.
+		const configDir = env.CRUSH_GLOBAL_CONFIG || join(env.XDG_CONFIG_HOME || join(homedir, '.config'), 'crush')
+		return { harness: 'crush', configDir, locations: [] }
+	},
+	openhands: ({ env, homedir }) => {
+		// The SDK reads OH_PERSISTENCE_DIR; the OpenHands CLI reads OPENHANDS_PERSISTENCE_DIR (E-OH-P2).
+		const configDir = env.OH_PERSISTENCE_DIR || env.OPENHANDS_PERSISTENCE_DIR || join(homedir, '.openhands')
+		const installed = join(configDir, 'plugins', 'installed')
+		return {
+			harness: 'openhands',
+			configDir,
+			locations: [
+				{
+					kind: 'installed-plugins',
+					path: installed,
+					description: 'Installed plugins, one folder each',
+					research: 'E-OH-P3',
+				},
+				{
+					kind: 'enabled-record',
+					path: join(installed, '.installed.json'),
+					description: 'Install metadata keyed by plugin name, each with enabled: <bool>',
+					research: 'E-OH-P4',
+				},
+			],
+		}
+	},
+	augment: ({ homedir }) => {
+		// The Auggie CLI has no environment override for ~/.augment, only a CLI flag (E-AUG-P1).
+		const configDir = join(homedir, '.augment')
+		return {
+			harness: 'augment',
+			configDir,
+			locations: [
+				{
+					kind: 'marketplaces',
+					path: join(configDir, 'plugins', 'marketplaces'),
+					description: 'Marketplace checkouts',
+					research: 'E-AUG-P2',
+				},
+				{
+					kind: 'enabled-record',
+					path: join(configDir, 'settings.json'),
+					description: 'User settings; enabledPlugins maps plugin@marketplace to a boolean',
+					research: 'E-AUG-P4',
+				},
+			],
+		}
+	},
 }

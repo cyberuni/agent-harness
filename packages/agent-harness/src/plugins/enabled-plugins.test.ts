@@ -151,8 +151,18 @@ describe('enabledPlugins', () => {
 		expect(await enabledPlugins('cursor', environment())).toMatchObject({ supported: false, plugins: [], sources: [] })
 	})
 
-	it.each(['opencode', 'kilo', 'gemini-cli', 'qwen-code', 'vscode-copilot', 'cline'] as const)(
-		'reports %s as unsupported, since it keeps no boolean enabled-plugin record',
+	it.each([
+		'opencode',
+		'kilo',
+		'gemini-cli',
+		'qwen-code',
+		'vscode-copilot',
+		'cline',
+		'crush',
+		'openhands',
+		'augment',
+	] as const)(
+		'reports %s as unsupported, since it keeps no enabled-plugin record this package can resolve',
 		async (harness) => {
 			expect(await enabledPlugins(harness, environment())).toMatchObject({ supported: false, plugins: [], sources: [] })
 		},

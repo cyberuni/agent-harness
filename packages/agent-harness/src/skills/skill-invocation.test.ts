@@ -38,8 +38,8 @@ describe('skillInvocation', () => {
 		})
 	})
 
-	it.each(['opencode', 'kilo', 'gemini-cli', 'qwen-code'] as const)(
-		'returns undefined for %s, where the model loads skills through a tool and no invocation is typed',
+	it.each(['opencode', 'kilo', 'gemini-cli', 'qwen-code', 'crush', 'openhands', 'augment'] as const)(
+		'returns undefined for %s, where no typed form of a plugin skill is confirmed',
 		(harness) => {
 			expect(skillInvocation(harness, { plugin: 'p', skill: 'review' })).toBeUndefined()
 		},

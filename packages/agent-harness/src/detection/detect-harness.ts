@@ -236,6 +236,63 @@ const rules: readonly DetectionRule[] = [
 			},
 		],
 	},
+	{
+		harness: 'crush',
+		all: [
+			{
+				name: 'CRUSH',
+				matches: isOne,
+				description: 'Crush sets CRUSH=1 for bash tool and hook commands, not for MCP servers',
+				research: 'E-CRUSH-D1',
+			},
+		],
+	},
+	{
+		harness: 'openhands',
+		all: [
+			{
+				name: 'AI_AGENT',
+				matches: (value) => value === 'openhands',
+				description:
+					'OpenHands sets AI_AGENT=openhands for terminal tool and hook commands when AI_AGENT is unset; other vendors use the name with other values',
+				research: 'E-OH-D1',
+			},
+		],
+	},
+	{
+		harness: 'openhands',
+		all: [
+			{
+				name: 'OPENHANDS_EVENT_TYPE',
+				matches: isSet,
+				description: 'OpenHands sets OPENHANDS_EVENT_TYPE for hook commands',
+				research: 'E-OH-D4',
+			},
+			{
+				name: 'OPENHANDS_PROJECT_DIR',
+				matches: isSet,
+				description: 'OpenHands sets OPENHANDS_PROJECT_DIR for hook commands',
+				research: 'E-OH-D4',
+			},
+		],
+	},
+	{
+		harness: 'augment',
+		all: [
+			{
+				name: 'AUGMENT_HOOK_EVENT',
+				matches: isSet,
+				description: 'The Auggie CLI sets AUGMENT_HOOK_EVENT for hook commands; its shell commands carry no marker',
+				research: 'E-AUG-D3',
+			},
+			{
+				name: 'AUGMENT_PROJECT_DIR',
+				matches: isSet,
+				description: 'The Auggie CLI sets AUGMENT_PROJECT_DIR for hook commands',
+				research: 'E-AUG-D3',
+			},
+		],
+	},
 ]
 
 /**

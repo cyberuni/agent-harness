@@ -44,3 +44,19 @@ Added OpenCode, Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, and
 
 Corrected before commit: the first pass missed the `GEMINI_CLI_HOME` and `QWEN_HOME` overrides and
 the XDG config path of OpenCode and Kilo Code (E-GEM-P2, E-QWEN-P4, E-OC-P4, E-KILO-P4).
+
+## 2026-09-27 — wave 2 of #6
+
+Added Crush, Goose, OpenHands, the Auggie CLI, Antigravity, and Rovo Dev to the evidence (E-CRUSH,
+E-GOOSE, E-OH, E-AUG, E-AGY, E-ROVO), and re-checked detection for Kiro, Amp, Factory Droid, Devin
+Desktop, and Warp (E-KIRO, E-AMP, E-DROID, E-DEVIN, E-WARP). Crush, OpenHands, and the Auggie CLI
+(hooks only) have verified signals. The other eight are recorded under "Wave 2: no verified signal"
+in the conclusion. Corrections to the #6 leads:
+
+- Goose's documented `GOOSE_TERMINAL=1` is set only on recipe check commands, not on the shell tool.
+- OpenHands has no `OPENHANDS=1`; it marks shell commands with `AI_AGENT=openhands`.
+- Crush sets `CRUSH=1` beside the shared `AGENT` and `AI_AGENT`.
+- Goose moved to `aaif-goose/goose`; OpenHands' runtime moved to `OpenHands/software-agent-sdk`.
+
+Corrected before commit: the hook-executor line anchor in E-OH-D4, and Factory Droid's npm package,
+which is `droid`, not `factory-cli`.

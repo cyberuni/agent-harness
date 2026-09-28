@@ -22,9 +22,14 @@ export interface SkillInvocation {
  * Claude Code and Copilot in VS Code namespace by plugin; elsewhere two plugins' skills with the
  * same name collide (Copilot CLI keeps the first one it finds).
  *
- * Returns `undefined` for OpenCode, Kilo Code, Gemini CLI, and Qwen Code, which document no typed
- * form: the model loads a skill through a tool call when its description matches the task
- * (E-OC-S2, E-KILO-S2, E-GEM-S2, E-QWEN-S1).
+ * Returns `undefined` for OpenCode, Kilo Code, Gemini CLI, Qwen Code, and Crush, which document no
+ * typed form: the model loads a skill through a tool call when its description matches the task
+ * (E-OC-S2, E-KILO-S2, E-GEM-S2, E-QWEN-S1, E-CRUSH-S1). Crush can also list a skill in its command
+ * palette, which is picked, not typed (E-CRUSH-S2). OpenHands triggers skills from the model too;
+ * only a plugin's commands take a `/<plugin>:<command>` form (E-OH-S2, E-OH-S3).
+ *
+ * Also returns `undefined` for the Auggie CLI: a plugin skill's internal name is `<plugin>:<skill>`,
+ * but what the user types for it is not confirmed (E-AUG-S3).
  */
 export function skillInvocation(harness: HarnessId, { plugin, skill }: PluginSkill): SkillInvocation | undefined {
 	switch (harness) {
@@ -44,6 +49,9 @@ export function skillInvocation(harness: HarnessId, { plugin, skill }: PluginSki
 		case 'kilo':
 		case 'gemini-cli':
 		case 'qwen-code':
+		case 'crush':
+		case 'openhands':
+		case 'augment':
 			return undefined
 	}
 }
