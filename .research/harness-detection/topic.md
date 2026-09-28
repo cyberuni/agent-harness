@@ -222,6 +222,12 @@ OpenHands started under a harness that set `AI_AGENT` is not seen. Hooks also ge
 `OPENHANDS_EVENT_TYPE` and `OPENHANDS_PROJECT_DIR`, which identify a hook even then (E-OH-D4). MCP
 servers get nothing (E-OH-D6).
 
+The OpenHands CLI is a separate release of the same runtime, and it lags. A live capture under CLI
+1.16.0 showed no `AI_AGENT` on terminal commands, while its hooks carried the `OPENHANDS_*` pair
+(E-OH-D9, E-OH-D10). The CLI pins SDK 1.21.0, and `AI_AGENT` first shipped in SDK 1.40.1
+(E-OH-D11). Until the CLI moves to a newer SDK, its shell commands are not detected, and its hooks
+are. The wave-2 read had inferred the opposite from the CLI using the SDK's terminal tool (E-OH-D7).
+
 ### Augment (Auggie CLI)
 
 The Auggie CLI is closed source, so its npm bundle was read. The shell tool and MCP launcher add no

@@ -2,7 +2,7 @@
 
 ## Last updated
 
-2026-09-27. Versions checked: Claude Code 2.1.283, cursor-agent 2026.07.01-41b2de7, codex-cli
+2026-09-28. Versions checked: Claude Code 2.1.283, cursor-agent 2026.07.01-41b2de7, codex-cli
 0.153.4 (source at openai/codex b8d5e3f), GitHub Copilot CLI 1.0.83.
 
 Wave 1 of [#6](https://github.com/cyberuni/agent-harness/issues/6), also 2026-09-26, read from
@@ -15,6 +15,9 @@ and OpenHands (OpenHands/software-agent-sdk 3311ba9e) read from source; the Augg
 (`@augmentcode/auggie` 0.36.0) read from its npm bundle and docs; Antigravity, Rovo Dev, Kiro, Amp,
 Factory Droid, Devin Desktop, and Warp checked against docs and, where one could be fetched, the
 shipped binary.
+
+[#33](https://github.com/cyberuni/agent-harness/issues/33), 2026-09-28: the OpenHands CLI 1.16.0
+captured live, with a mock LLM driving its terminal tool and a hook.
 
 ## Question
 
@@ -58,8 +61,8 @@ some agent is running, not which one.
 | Copilot in VS Code | `COPILOT_AGENT=1` | Terminal commands the chat agent runs (VS Code 1.121 and later) | High (source; the 1.121 release note misnames it `VSCODE_AGENT`) | E-VSC-D1, E-VSC-D4, E-VSC-D6 |
 | Cline | `CLINE_ACTIVE=true` | Terminal commands in the VS Code extension only | High (source) | E-CLINE-D1–D3 |
 | Crush | `CRUSH=1` | Bash tool and hook commands; not MCP servers | High (source) | E-CRUSH-D1–D4 |
-| OpenHands | `AI_AGENT=openhands` (exact value) | Terminal tool commands, local or in the agent-server sandbox; hook commands | High (source) | E-OH-D1–D3 |
-| OpenHands (hooks) | `OPENHANDS_EVENT_TYPE` and `OPENHANDS_PROJECT_DIR` both set | Hook commands | High (source) | E-OH-D4 |
+| OpenHands | `AI_AGENT=openhands` (exact value) | Terminal tool and hook commands, local or in the agent-server sandbox, from SDK 1.40.1 on. Not the OpenHands CLI 1.16.0, which pins SDK 1.21.0 | High (source; the CLI by direct experiment) | E-OH-D1–D3, E-OH-D9, E-OH-D11 |
+| OpenHands (hooks) | `OPENHANDS_EVENT_TYPE` and `OPENHANDS_PROJECT_DIR` both set | Hook commands, including the OpenHands CLI's | High (source and direct experiment) | E-OH-D4, E-OH-D10 |
 | Auggie CLI (hooks) | `AUGMENT_HOOK_EVENT` and `AUGMENT_PROJECT_DIR` both set | Hook commands only | High (docs and bundle) | E-AUG-D2, E-AUG-D3 |
 
 Signals to **reject** as proof:
@@ -250,8 +253,7 @@ The survey behind #6 reported five products as gone. Checked against vendor sour
 - The macOS managed-preferences domain for VS Code policy. The docs name the profile format only.
 - Where Copilot in VS Code, OpenCode, Kilo Code, and Cline record a plugin as disabled, if anywhere.
 - Wave 2: a live `env` capture for each harness in "Wave 2: no verified signal" marked as needing
-  one, and for OpenHands under the OpenHands CLI binary, whose shell tool is inferred to be the SDK's
-  (E-OH-D7).
+  one.
 - How the Auggie CLI types a plugin's skill: `/<skill>` or `/<plugin>:<skill>` (E-AUG-S3).
 - Most wave-1 facts are source reads. A vendor docs page for the detection variables was found only
   for VS Code, and that page names the wrong variable (E-VSC-D6).
