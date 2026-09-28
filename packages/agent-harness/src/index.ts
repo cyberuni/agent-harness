@@ -27,3 +27,5 @@ export type { PluginStorage, PluginStorageKind, PluginStorageLocation } from './
 export { pluginStorage } from './plugins/plugin-storage.js'
 export type { PluginSkill, SkillInvocation } from './skills/skill-invocation.js'
 export { skillInvocation } from './skills/skill-invocation.js'
+export type { SkillsDirectories } from './skills/skills-directories.js'
+export { skillsDirectories } from './skills/skills-directories.js'
