@@ -1,41 +1,62 @@
 # agent-harness
 
+[![npm](https://img.shields.io/npm/v/@cyberuni/agent-harness.svg)](https://www.npmjs.com/package/@cyberuni/agent-harness)
 ![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
-**Status: pre-release.** Nothing here is published yet. The first work is research, not code.
+**Status: pre-release.** `@cyberuni/agent-harness` is published on npm, and its API may still change
+between minor versions.
 
 ## The problem
 
-Every tool that works across AI coding agents — a plugin installer, a doctor script, a config
-migrator — ends up re-detecting which harness it is running under: Claude Code, Cursor, Codex, or
-GitHub Copilot CLI. Each does this separately, with its own guesses about env vars, file paths, and
-process trees, and each guess decays differently as vendors change their tooling.
+Every tool that works across AI coding agents, such as a plugin installer, a doctor script, or a
+config migrator, ends up re-detecting which harness it is running under. Each does this separately,
+with its own guesses about env vars, file paths, and process trees, and each guess decays
+differently as vendors change their tooling.
 
 `agent-harness` is a zero-runtime-dependency TypeScript library that does this detection once, so
 [`universal-plugin`](https://github.com/cyberuni/universal-plugin),
 [`buddy-agent-harness`](https://github.com/repobuddy/buddy-agent-harness), `repobuddy`, and
 `cyberlegion/cyber-mux` can share one implementation instead of maintaining four.
 
-## Planned API
+## What it does
 
-```ts
-import { detectHarness } from '@cyberuni/agent-harness'
-
-const result = detectHarness()
-// { harness: 'claude-code' | 'cursor' | 'codex' | 'copilot-cli' | 'unknown', evidence: [...] }
+```sh
+npm install @cyberuni/agent-harness
 ```
 
-Beyond identifying the harness, the library will answer what that harness holds: where it looks for
-managed policy, where it stores installed plugins, which plugins are currently enabled, and how it
-names a plugin's skills on disk.
+```ts
+import { detectHarness, skillsDirectories } from '@cyberuni/agent-harness'
 
-## Status
+const { harness } = detectHarness() // 'claude-code', 'codex', …, or 'unknown'
+if (harness !== 'unknown') skillsDirectories(harness)
+```
 
-Research first. `detectHarness()` currently ships as a stub that always reports `unknown` — see
-[`packages/agent-harness`](packages/agent-harness) — because no detection rule here is backed by
-verified vendor behavior yet. That verification is the job of
-[`.research/harness-detection`](.research), which does not exist yet either. Read `.research/README.md`
-for what is investigated once that topic starts.
+It detects Claude Code, Cursor, Codex, GitHub Copilot CLI, OpenCode, Kilo Code, Gemini CLI, Qwen
+Code, GitHub Copilot in VS Code, Cline, Crush, OpenHands, and the Auggie CLI. It reports `unknown`
+rather than guess when no harness matches or when more than one does.
+
+For a known harness it also answers what that harness holds:
+
+| Function | Answers |
+| --- | --- |
+| `managedPolicyLocations()` | Where managed policy lives: files, MDM domains, registry keys, servers |
+| `pluginStorage()` | Where installed plugins, marketplaces, and the enabled record live |
+| `enabledPlugins()` | Which plugins are enabled, resolved by scope precedence |
+| `skillInvocation()` | How a user types a plugin's skill, such as `/my-plugin:review` |
+| `supportsPluginDependencies()` | Whether a plugin can declare other plugins it depends on |
+| `skillsDirectories()` | Which project and user directories the harness reads skills from |
+
+The [package readme](packages/agent-harness/readme.md) documents each function, the signal behind
+each harness, and the cases that report `unknown`.
+
+## Research first
+
+Every harness fact the library encodes rests on a claim in
+[`.research/harness-detection`](.research/harness-detection), recorded with a source URL and a
+confidence rating. Results carry the IDs of the claims behind them. The library does not detect a
+harness it has not verified: Goose, Antigravity, Rovo Dev, Kiro, Amp, Factory Droid, Devin Desktop,
+and Warp are left out because none has a verified signal. See
+[`.research/README.md`](.research/README.md) for how topics are organized.
 
 ## Layout
 
