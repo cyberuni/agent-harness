@@ -1,5 +1,7 @@
 import { homedir } from 'node:os'
 
+import type { Platform } from './platform.js'
+
 /**
  * The parts of the running process a harness query depends on. Every field defaults to the
  * current process, so callers pass them only to inspect another environment (or in tests).
@@ -12,7 +14,7 @@ export interface HarnessEnvironment {
 	/** The project directory, for project-scoped settings. Defaults to `process.cwd()`. */
 	readonly cwd?: string
 	/** Defaults to `process.platform`. */
-	readonly platform?: NodeJS.Platform
+	readonly platform?: Platform
 }
 
 export type ResolvedHarnessEnvironment = Required<HarnessEnvironment>
