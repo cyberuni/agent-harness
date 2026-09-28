@@ -97,6 +97,19 @@ The new drift watch surfaced two skills-axis disagreements, recorded under "Drif
 conclusion and left open for research: the Auggie CLI and Kilo Code skills pages now name more
 directories than E-AUG-S1 and E-KILO-L1 record.
 
+## 2026-09-28 — live captures for #33
+
+Captured the OpenHands CLI 1.16.0 live (E-OH-D9–D11). A local mock LLM drove one terminal command
+and one hook, so no model account was needed. This corrects E-OH-D7:
+
+- The CLI's terminal commands carry no `AI_AGENT`. The CLI pins SDK 1.21.0, and the SDK started
+  setting `AI_AGENT=openhands` in 1.40.1.
+- The CLI's hook commands carry `OPENHANDS_EVENT_TYPE` and `OPENHANDS_PROJECT_DIR`, so the hook rule
+  still detects them.
+
+The detection rules are unchanged. What changed is which OpenHands builds the `AI_AGENT` rule
+reaches.
+
 ## 2026-10-04 — R9 headless invocation
 
 For [cyberuni/cyber-sdd#69](https://github.com/cyberuni/cyber-sdd/issues/69), which moves a
