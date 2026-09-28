@@ -60,3 +60,16 @@ in the conclusion. Corrections to the #6 leads:
 
 Corrected before commit: the hook-executor line anchor in E-OH-D4, and Factory Droid's npm package,
 which is `droid`, not `factory-cli`.
+
+## 2026-09-28 — live captures for #33
+
+Captured the OpenHands CLI 1.16.0 live (E-OH-D9–D11). A local mock LLM drove one terminal command
+and one hook, so no model account was needed. This corrects E-OH-D7:
+
+- The CLI's terminal commands carry no `AI_AGENT`. The CLI pins SDK 1.21.0, and the SDK started
+  setting `AI_AGENT=openhands` in 1.40.1.
+- The CLI's hook commands carry `OPENHANDS_EVENT_TYPE` and `OPENHANDS_PROJECT_DIR`, so the hook rule
+  still detects them.
+
+The detection rules are unchanged. What changed is which OpenHands builds the `AI_AGENT` rule
+reaches.
