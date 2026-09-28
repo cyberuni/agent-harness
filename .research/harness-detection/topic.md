@@ -185,6 +185,60 @@ Roo Code, Continue, Amazon Q Developer CLI, and Windsurf are gone or renamed, as
 (E-RET-R1, E-RET-R2, E-RET-R4, E-RET-R5). Aider is quiet, not discontinued: there is no vendor
 statement, only a stall in releases and commits (E-RET-R3).
 
+## Wave 2 of #6
+
+Wave 2 took the six harnesses #6 queued after wave 1 (Crush, Goose, OpenHands, Augment,
+Antigravity, Rovo Dev) and re-checked five that earlier surveys found no variable for (Kiro, Amp,
+Factory Droid, Devin Desktop, Warp). Each lead was treated as unverified. On 2026-09-27 each open
+source harness was read at a pinned commit. Each closed one was read from its docs and, where a
+package could be fetched, from its shipped bundle or binary, which was grepped or run through
+`strings` and never executed. No harness was installed and run, so no environment was dumped.
+
+### Crush
+
+Crush has one function, `CrushEnvMarkers()`, that returns `CRUSH=1`, `AGENT=crush`, and
+`AI_AGENT=crush`. Both the bash tool and the hook runner append it (E-CRUSH-D1–D3). MCP servers get
+the process environment only, so they cannot be identified (E-CRUSH-D4). `AGENT` and `AI_AGENT` are
+shared names, so the rule rests on `CRUSH=1`. Crush has no plugin system (E-CRUSH-P2). Its
+`/etc/crush/crush.json` is the lowest-ranked config, not an enforced policy (E-CRUSH-M1).
+
+### Goose
+
+The repository moved from `block/goose` to `aaif-goose/goose`. Its docs say goose sets
+`GOOSE_TERMINAL=1` and `AGENT=goose` whenever it runs a command (E-GOOSE-D1). The source says
+otherwise: the only assignment is in the runner for a recipe's check commands, and the Developer
+extension's shell tool sets just `AGENT_SESSION_ID` (E-GOOSE-D2, E-GOOSE-D3). That variable fails as
+evidence, because its name is generic and `goose term init` puts it in a person's own shell too
+(E-GOOSE-D5). The source wins, so Goose is not detected.
+
+### OpenHands
+
+The agent runtime now lives in `OpenHands/software-agent-sdk`. `OpenHands/OpenHands` has become
+Agent Canvas, a UI that drives other agents. One helper, `sanitized_env()`, builds the environment
+for the terminal tool, the agent-server sandbox, and hooks. It sets `AI_AGENT=openhands` when
+`AI_AGENT` is unset (E-OH-D1–D3). The variable name is shared, but no other harness uses that
+value, so the rule matches the exact value. Because OpenHands does not overwrite an existing value,
+OpenHands started under a harness that set `AI_AGENT` is not seen. Hooks also get
+`OPENHANDS_EVENT_TYPE` and `OPENHANDS_PROJECT_DIR`, which identify a hook even then (E-OH-D4). MCP
+servers get nothing (E-OH-D6).
+
+### Augment (Auggie CLI)
+
+The Auggie CLI is closed source, so its npm bundle was read. The shell tool and MCP launcher add no
+Augment variable (E-AUG-D1, E-AUG-D7). Hook commands get `AUGMENT_HOOK_EVENT`,
+`AUGMENT_PROJECT_DIR`, and `AUGMENT_CONVERSATION_ID`, which the hooks page documents too
+(E-AUG-D2, E-AUG-D3). The rule covers hooks only. Auggie mirrors Claude Code's plugin layout, down
+to a `CLAUDE_PLUGIN_ROOT` alias on plugin hooks and a `.claude-plugin` marketplace folder (E-AUG-D4,
+E-AUG-P3). Its `enabledPlugins` record merges only `true` entries across scopes (E-AUG-P4). That
+does not fit this package's per-scope reading, so `enabledPlugins()` reports Auggie as unsupported.
+
+### Harnesses with no verified signal
+
+Antigravity, Rovo Dev, Kiro, Devin Desktop, and Warp are closed source, and their docs name only
+variables a user sets. Amp's wrapper passes the environment through unchanged, and its binary's
+strings show no marker. Factory Droid's `FACTORY_ENV` reaches only the worker `droid` processes it
+spawns. The table in [conclusion.md](./conclusion.md) says which need a live `env` capture.
+
 ## Cross-harness findings
 
 - **Compatibility aliases blur `CLAUDE_*` names.** Three harnesses pass `CLAUDE_PLUGIN_ROOT`,
@@ -193,8 +247,14 @@ statement, only a stall in releases and commits (E-RET-R3).
 - **Nesting is ambiguous.** Environment variables are inherited, so a shell under Codex that was
   started from Claude Code carries both harnesses' markers. Nothing in the environment says which is
   innermost. The honest answer is `unknown`, with both candidates in the evidence.
-- **Plugin dependencies are Claude Code only.** R5 is settled for all ten.
+- **Plugin dependencies are Claude Code only.** R5 is settled for all thirteen detected harnesses.
 - **Forks keep some parent variables.** Kilo Code kept `OPENCODE=1`; Qwen Code renamed everything.
   A parent's rule must rest on a variable its forks do not set.
 - **Cross-vendor variables are spreading.** `AGENT=1` and `AI_AGENT` announce that an agent is
-  running, not which. VS Code sets `AI_AGENT` for agents it merely hosts.
+  running, not which. VS Code sets `AI_AGENT` for agents it merely hosts. Crush, Goose, and
+  OpenHands write their own names into these shared variables; only OpenHands' value is used, and
+  only because OpenHands sets no variable of its own on shell commands.
+- **Docs can overstate.** Goose documents a variable its shell tool does not set, and VS Code's
+  release note names a variable that does not exist. The source wins.
+- **Many closed harnesses cannot be settled from outside.** Half of wave 2 needs a live
+  environment capture, which this investigation could not run.

@@ -2,7 +2,7 @@
 
 ## Last updated
 
-2026-09-26. Versions checked: Claude Code 2.1.283, cursor-agent 2026.07.01-41b2de7, codex-cli
+2026-09-27. Versions checked: Claude Code 2.1.283, cursor-agent 2026.07.01-41b2de7, codex-cli
 0.153.4 (source at openai/codex b8d5e3f), GitHub Copilot CLI 1.0.83.
 
 Wave 1 of [#6](https://github.com/cyberuni/agent-harness/issues/6), also 2026-09-26, read from
@@ -10,20 +10,30 @@ source at pinned commits: OpenCode (anomalyco/opencode b471c2b4), Kilo Code (Kil
 7d977bce), Gemini CLI (google-gemini/gemini-cli 2fe7c2d3), Qwen Code (QwenLM/qwen-code e471cfe6),
 VS Code (microsoft/vscode 66a33c85), and Cline (cline/cline 29896ec7).
 
+Wave 2 of #6, 2026-09-27: Crush (charmbracelet/crush 056387be), Goose (aaif-goose/goose 98c626d7),
+and OpenHands (OpenHands/software-agent-sdk 3311ba9e) read from source; the Auggie CLI
+(`@augmentcode/auggie` 0.36.0) read from its npm bundle and docs; Antigravity, Rovo Dev, Kiro, Amp,
+Factory Droid, Devin Desktop, and Warp checked against docs and, where one could be fetched, the
+shipped binary.
+
 ## Question
 
 How can a process tell which agent harness it runs under — Claude Code, Cursor, Codex, GitHub
-Copilot CLI, OpenCode, Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, or Cline — and, for that harness, where do its plugins live, which plugins are enabled, where
-does managed policy live, how does it name plugin skills, and can plugins depend on each other?
+Copilot CLI, OpenCode, Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, Cline, Crush,
+OpenHands, or the Auggie CLI — and, for that harness, where do its plugins live, which plugins are
+enabled, where does managed policy live, how does it name plugin skills, and can plugins depend on
+each other?
 
 ## Verdict
 
-**Every harness checked marks the shell commands its agent runs with an environment variable of its
-own.** Most wave-1 variables are read from source rather than vendor docs. Detection by environment
-is reliable for commands the agent runs. It is weaker for hook scripts and MCP servers, and it
-cannot resolve nesting: a harness started from another harness's shell inherits the outer harness's
-variables, so the environment alone cannot say which one is innermost. A detector must report `unknown` when signals from two harnesses are
-present.
+**Every wave-1 harness marks the shell commands its agent runs with an environment variable of its
+own. Wave 2 breaks that pattern.** Of its eleven candidates, Crush and OpenHands mark shell commands,
+the Auggie CLI marks only hook commands, and the other eight have no verified signal (see "Wave 2: no
+verified signal"). Most variables are read from source rather than vendor docs. Detection by
+environment is reliable for commands the agent runs. It is weaker for hook scripts and MCP servers,
+and it cannot resolve nesting: a harness started from another harness's shell inherits the outer
+harness's variables, so the environment alone cannot say which one is innermost. A detector must
+report `unknown` when signals from two harnesses are present.
 
 Forks inherit their parent's code, and with it some of the parent's variables. Kilo Code still sets
 OpenCode's `OPENCODE=1`. The parent's rule must require a variable the fork does not set, so a fork
@@ -47,6 +57,10 @@ some agent is running, not which one.
 | Qwen Code | `QWEN_CODE=1` | Shell tool commands only | High (source) | E-QWEN-D1 |
 | Copilot in VS Code | `COPILOT_AGENT=1` | Terminal commands the chat agent runs (VS Code 1.121 and later) | High (source; the 1.121 release note misnames it `VSCODE_AGENT`) | E-VSC-D1, E-VSC-D4, E-VSC-D6 |
 | Cline | `CLINE_ACTIVE=true` | Terminal commands in the VS Code extension only | High (source) | E-CLINE-D1–D3 |
+| Crush | `CRUSH=1` | Bash tool and hook commands; not MCP servers | High (source) | E-CRUSH-D1–D4 |
+| OpenHands | `AI_AGENT=openhands` (exact value) | Terminal tool commands, local or in the agent-server sandbox; hook commands | High (source) | E-OH-D1–D3 |
+| OpenHands (hooks) | `OPENHANDS_EVENT_TYPE` and `OPENHANDS_PROJECT_DIR` both set | Hook commands | High (source) | E-OH-D4 |
+| Auggie CLI (hooks) | `AUGMENT_HOOK_EVENT` and `AUGMENT_PROJECT_DIR` both set | Hook commands only | High (docs and bundle) | E-AUG-D2, E-AUG-D3 |
 
 Signals to **reject** as proof:
 
@@ -61,9 +75,23 @@ Signals to **reject** as proof:
 - `COPILOT_HOME`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`, `CURSOR_CONFIG_DIR`, `GEMINI_CLI_HOME`,
   `QWEN_HOME`, `OPENCODE_CONFIG*`, `KILO_CONFIG*`, `CLINE_DATA_DIR`. These are user settings.
 - `AGENT=1`. OpenCode and Kilo Code both set it, and it names no vendor (E-OC-D6, E-KILO-D1).
-- `AI_AGENT`. A cross-vendor convention: VS Code sets `github_copilot_vscode_agent` on every agent
-  session it hosts, including external CLIs it launches, and Claude Code sets its own value
-  (E-VSC-D2, E-VSC-D5, E-CC-D9).
+- `AI_AGENT` with any value but `openhands`. A cross-vendor convention: VS Code sets
+  `github_copilot_vscode_agent` on every agent session it hosts, including external CLIs it
+  launches, Claude Code sets its own value, and Crush sets `crush` alongside `CRUSH=1` (E-VSC-D2,
+  E-VSC-D5, E-CC-D9, E-CRUSH-D1). OpenHands fills in `openhands` only when `AI_AGENT` is unset, so
+  that exact value is OpenHands' own, but OpenHands started under a harness that already set
+  `AI_AGENT` keeps the outer value and is not seen (E-OH-D5).
+- `AGENT=crush`, `AGENT=goose`. Vendor values in a shared name; Crush's own `CRUSH=1` is used
+  instead, and Goose sets its pair only on recipe check commands (E-CRUSH-D5, E-GOOSE-D2).
+- `GOOSE_TERMINAL`. Goose documents it for every command, but the source sets it only on a recipe's
+  `success_check` and `on_failure` commands, not on the shell tool the agent uses (E-GOOSE-D1,
+  E-GOOSE-D2).
+- `AGENT_SESSION_ID`. Goose sets it on shell and MCP commands, but the name is generic, the value is
+  a session id, and `goose term init` exports it into a person's own shell (E-GOOSE-D5).
+- `AUGMENT_PLUGIN_ROOT`, `AUGGIE_PLUGIN_ROOT`. Real, but only on plugin hooks and read from the
+  bundle alone; Auggie also sets `CLAUDE_PLUGIN_ROOT` beside them (E-AUG-D4).
+- `FACTORY_ENV`. Factory Droid sets it only on the worker `droid` processes it spawns, not on its
+  shell tool (E-DROID-D1–D3).
 - `OPENCODE=1` alone. Kilo Code still sets it (E-KILO-D1); only `OPENCODE_PID`, which Kilo replaced
   with `KILO_PID`, separates the two.
 - `VSCODE_AGENT`. The VS Code 1.121 release note names it, but no such variable exists in source
@@ -79,6 +107,9 @@ Signals to **reject** as proof:
 - Qwen Code MCP servers: the fork dropped the variable Gemini CLI sets there (E-QWEN-D2).
 - Copilot in VS Code hooks and MCP servers (E-VSC-D9, E-VSC-D10).
 - The Cline CLI, which sets no variable of its own (E-CLINE-D4).
+- Crush, OpenHands, and Auggie MCP servers, which get no identifying variable (E-CRUSH-D4, E-OH-D6,
+  E-AUG-D7).
+- Auggie shell commands (E-AUG-D1).
 
 **IDE or CLI, for Cursor:** both set `CURSOR_AGENT=1`. Only the CLI's launcher exports
 `CURSOR_INVOKED_AS`, so `CURSOR_AGENT=1` without it points to the IDE (E-CUR-D4, E-CUR-D12, Medium).
@@ -97,6 +128,9 @@ Signals to **reject** as proof:
 | Qwen Code | `$QWEN_HOME` or `~/.qwen` (E-QWEN-P4) | `extensions/<name>/qwen-extension.json` (E-QWEN-P1) | `extensions/extension-enablement.json` (Medium, E-QWEN-P2) | None read by this package |
 | Copilot in VS Code | VS Code's user data directory | `agentPlugins/` under `~/Library/Application Support/Code` (macOS), `~/.config/Code` (Linux), `%APPDATA%\Code` (Windows) (E-VSC-P3) | Not found; kept apart from plugin config (E-VSC-P4) | None |
 | Cline | `~/.cline` (E-CLINE-P1) | `plugins/_installed/{npm,git,remote,local}/` (E-CLINE-P3) | Not found (E-CLINE-P4) | None |
+| Crush | `$CRUSH_GLOBAL_CONFIG`, else `$XDG_CONFIG_HOME/crush` or `~/.config/crush` (E-CRUSH-P1) | None; Crush has no plugin system (E-CRUSH-P2) | None | None |
+| OpenHands | `$OH_PERSISTENCE_DIR` or `~/.openhands`; the CLI reads `OPENHANDS_PERSISTENCE_DIR` instead (E-OH-P1, E-OH-P2) | `plugins/installed/<name>/` (E-OH-P3) | `.installed.json` in the install folder, `enabled: bool` per name (E-OH-P4) | None read by this package |
+| Auggie CLI | `~/.augment`; no env override (E-AUG-P1) | `plugins/marketplaces/` (E-AUG-P2) | `enabledPlugins` in `settings.json`, but only `true` entries count when scopes merge (E-AUG-P4) | None read by this package |
 
 Caveats:
 
@@ -111,6 +145,10 @@ Caveats:
   set can be overridden by policy this package cannot see.
 - Cline documents `CLINE_DATA_DIR` as an override but not whether it replaces `~/.cline` or
   `~/.cline/data` (E-CLINE-P1). This package does not apply it.
+- Auggie keeps only the `true` entries of each scope's `enabledPlugins` and merges them, so a `false`
+  entry does not turn off a plugin another scope enables. That rule is read from a minified bundle,
+  and it does not fit this package's per-scope resolution, so `enabledPlugins()` reports Auggie as
+  unsupported.
 - `OPENCODE_CONFIG_DIR` and `KILO_CONFIG_DIR` add a directory searched like a project `.opencode/`;
   they do not move the global config dir (E-OC-P1, E-OC-P4, E-KILO-P4).
 
@@ -128,10 +166,14 @@ Caveats:
 | Qwen Code | `settings.json` and `system-defaults.json` in `/Library/Application Support/QwenCode/` (macOS), `/etc/qwen-code/` (Linux), `C:\ProgramData\qwen-code\` (Windows); `QWEN_CODE_SYSTEM_SETTINGS_PATH` and `QWEN_CODE_SYSTEM_DEFAULTS_PATH` override them (E-QWEN-M1, E-QWEN-M3) | Not found in source (E-QWEN-M2) | Not found |
 | Copilot in VS Code | `/etc/vscode/policy.json` (Linux, VS Code 1.106 and later) (E-VSC-M3) | Windows `Software\Policies\Microsoft\VSCode`; macOS `.mobileconfig` profile, domain not documented (E-VSC-M1, E-VSC-M2) | Not researched |
 | Cline | None found | None found | Cline Enterprise admin console (Medium, E-CLINE-M1) |
+| Crush | `/etc/crush/crush.json` outside Windows, the lowest-ranked config (E-CRUSH-M1, E-CRUSH-M2) | None found | None found |
+| OpenHands | None found (E-OH-D8) | None found | OpenHands Cloud and Enterprise, not inspectable (E-OH-D8) |
+| Auggie CLI | `/etc/augment/settings.json` (macOS, Linux); `%ProgramData%\augment\settings.json` (Windows) (Medium, E-AUG-M1) | None found (E-AUG-M2) | Not researched |
 
 The Cursor row covers hooks only. Cursor documents no local file for its other enterprise
 settings. The Gemini CLI and Qwen Code "system" settings are the closest thing they have to managed
-policy: a system-wide file that outranks user settings.
+policy: a system-wide file that outranks user settings. Crush's system file is the reverse: user and
+project config override it, so it sets defaults, not policy.
 
 ## R4. Skill naming
 
@@ -147,6 +189,9 @@ policy: a system-wide file that outranks user settings.
 | Qwen Code | None; the model calls a `skill` tool | — | No | E-QWEN-S1 |
 | Copilot in VS Code | `/<skill>`; a plugin's skill is `/<plugin>:<skill>` | — | Yes, for plugin skills | E-VSC-S1 |
 | Cline | `/<skill>` | — | No | E-CLINE-S1, E-CLINE-S2 |
+| Crush | None typed; the model activates a skill, and `user-invocable: true` adds it to the command palette | — | No; one flat namespace | E-CRUSH-S1, E-CRUSH-S2 |
+| OpenHands | A plugin's commands are `/<plugin>:<command>`; skills are triggered by the model | — | Yes, for plugin commands | E-OH-S2, E-OH-S3 |
+| Auggie CLI | `/<skill>` for a user or project skill; a plugin skill's typed form is not confirmed | — | A plugin skill's internal name is `<plugin>:<skill>` | E-AUG-S2, E-AUG-S3 |
 
 The skill's frontmatter `name` supplies the skill segment in every harness.
 
@@ -156,8 +201,26 @@ Only Claude Code supports them: `dependencies` in `plugin.json` (E-CC-X1). Curso
 (E-CUR-X1), Codex's manifests and the Agent Plugins 1.0 schema (E-CODEX-X1, E-CODEX-X2), and
 Copilot CLI's manifest reference (E-COPILOT-X1) have no such field. Neither do OpenCode plugins,
 which have no manifest (E-OC-X1), Kilo Code (only an `engines` version range, E-KILO-X1), Gemini CLI
-and Qwen Code extensions (E-GEM-P4, E-QWEN-P3), Copilot in VS Code (E-VSC-X1), or Cline (only
-`peerDependencies` on host packages, E-CLINE-X1).
+and Qwen Code extensions (E-GEM-P4, E-QWEN-P3), Copilot in VS Code (E-VSC-X1), Cline (only
+`peerDependencies` on host packages, E-CLINE-X1), Crush (no plugin system, E-CRUSH-X1), OpenHands
+(E-OH-X1), or the Auggie CLI (E-AUG-X1).
+
+## Wave 2: no verified signal
+
+These harnesses are not detected. Each row says why, and whether a live `env` capture from a
+running session is still needed to settle it.
+
+| Harness | Finding | Live capture needed? | Evidence |
+| --- | --- | --- | --- |
+| Goose | Source sets `GOOSE_TERMINAL=1` and `AGENT=goose` only on recipe check commands, contrary to its docs; the shell tool sets only the generic `AGENT_SESSION_ID` | No; re-read the source if the docs' claim is later implemented | E-GOOSE-D1–D5 |
+| Antigravity | Closed source; the CLI changelog and docs name only variables the user sets (`AGY_CLI_*`, `AGY_ADC_AUTH`). It shares `~/.gemini` with Gemini CLI, and no evidence shows it sets `GEMINI_CLI` | Yes | E-AGY-D1–D5 |
+| Rovo Dev CLI | Closed source; `acli rovodev` runs a separately downloaded agent binary, and no docs name a variable | Yes | E-ROVO-D1–D4 |
+| Kiro | Closed source; documented `KIRO_*` variables are user settings, and `USER_PROMPT` is set only for one hook trigger | Yes | E-KIRO-D1–D5 |
+| Amp | The npm wrapper passes the environment through, and the binary's strings show no marker; `TOOLBOX_ACTION` reaches toolbox executables only | Recommended, since `strings` can miss embedded code | E-AMP-D1–D5 |
+| Factory Droid | `FACTORY_ENV` reaches worker `droid` processes only; the shell tool adds none. MCP servers and hooks were not traced | Yes | E-DROID-D1–D7 |
+| Devin Desktop | Closed source; its terminal page names no variable. `DEVIN_PROJECT_DIR` belongs to Devin CLI hooks | Yes | E-DEVIN-D1–D6 |
+| Warp (agent mode) | No variable separates an agent-run command from a typed one; `TERM_PROGRAM=WarpTerminal` marks the terminal | Yes | E-WARP-D1–D6 |
+| Augment IDE extension | Its terminal environment is undocumented; only the Auggie CLI was read | Yes | E-AUG-D6 |
 
 ## Reported retirements
 
@@ -186,5 +249,9 @@ The survey behind #6 reported five products as gone. Checked against vendor sour
 - Whether Cline's JetBrains client sets `CLINE_ACTIVE`. Its source is not in `cline/cline`.
 - The macOS managed-preferences domain for VS Code policy. The docs name the profile format only.
 - Where Copilot in VS Code, OpenCode, Kilo Code, and Cline record a plugin as disabled, if anywhere.
+- Wave 2: a live `env` capture for each harness in "Wave 2: no verified signal" marked as needing
+  one, and for OpenHands under the OpenHands CLI binary, whose shell tool is inferred to be the SDK's
+  (E-OH-D7).
+- How the Auggie CLI types a plugin's skill: `/<skill>` or `/<plugin>:<skill>` (E-AUG-S3).
 - Most wave-1 facts are source reads. A vendor docs page for the detection variables was found only
   for VS Code, and that page names the wrong variable (E-VSC-D6).
