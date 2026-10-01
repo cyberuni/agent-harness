@@ -188,8 +188,8 @@ importers:
         specifier: ^2.9.16
         version: 2.11.4
       universal-plugin:
-        specifier: ^0.10.0
-        version: 0.10.0
+        specifier: ^0.11.0
+        version: 0.11.1
 
   apps/web:
     dependencies:
@@ -654,6 +654,10 @@ packages:
   '@ctrl/tinycolor@4.2.1':
     resolution: {integrity: sha512-Vh5uy9Y1JBMId6J1f68TMXnZrTCvNdo9Fu2k0d1YnJngR+sM5kWTKl441c/3TFs+cG0NWOjRWgQ/iaWhbYx+7A==}
     engines: {node: '>=14'}
+
+  '@cyberuni/agent-harness@0.1.0':
+    resolution: {integrity: sha512-EFi1GZpZ2ziQ+GoE7Fyu0dIn881IVUdxQNXSMDkSCsliz2O8P3hnCxBinLaJYtgN4CuqeE0o9twSLzqD1OIrgQ==}
+    engines: {node: '>=22'}
 
   '@emmetio/abbreviation@2.3.3':
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
@@ -3024,8 +3028,8 @@ packages:
   unist-util-visit@5.1.0:
     resolution: {integrity: sha512-m+vIdyeCOpdr/QeQCu2EzxX/ohgS8KbnPDgFni4dQsfSCtpz8UqDyY5GjRru8PDKuYn7Fq19j1CQ+nJSsGKOzg==}
 
-  universal-plugin@0.10.0:
-    resolution: {integrity: sha512-4vuqG5qH2RQ/7KO4Mji+m4uVGliFR4+Ey65xyntZQMTJiLqLCsK3TPzVUWlQ08ghswC356fMqVB7TmOLeRawbQ==}
+  universal-plugin@0.11.1:
+    resolution: {integrity: sha512-Cs1ceRTV8uQVYbajvaMcJww04DikyWj5O93GbKdPEMx8L0yaQQGfp/2HtW21wD+LWOyMhk+CfM/V+CUGIaD2nA==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -3906,6 +3910,8 @@ snapshots:
   '@conventional-changelog/template@1.4.0': {}
 
   '@ctrl/tinycolor@4.2.1': {}
+
+  '@cyberuni/agent-harness@0.1.0': {}
 
   '@emmetio/abbreviation@2.3.3':
     dependencies:
@@ -6649,8 +6655,9 @@ snapshots:
       unist-util-is: 6.0.1
       unist-util-visit-parents: 6.0.2
 
-  universal-plugin@0.10.0:
+  universal-plugin@0.11.1:
     dependencies:
+      '@cyberuni/agent-harness': 0.1.0
       '@repobuddy/upx': 0.1.1
       '@toon-format/toon': 4.1.1
       commander: 14.0.3
