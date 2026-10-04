@@ -1,4 +1,11 @@
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'tsdown'
+
+/** Read once here so the skill script gets them as literals: it ships with no `package.json` beside it. */
+const { name, version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
+	name: string
+	version: string
+}
 
 // Dependencies stay external: `createReferenceCommand` must compose into the host CLI's own
 // `clibuilder` instance, not a private inlined copy that breaks command-registry identity.
@@ -26,5 +33,33 @@ export default defineConfig([
 		...shared,
 		entry: { cli: 'src/cli.ts' },
 		dts: false,
+	},
+	{
+		// The `reference` skill's launcher. An installed plugin has no `node_modules`, so every
+		// dependency is inlined into this one file, and it is written straight into the skill folder.
+		// The folder's `.mjs` is gitignored; it ships through the npm package's `files`.
+		format: 'esm',
+		platform: 'node',
+		outDir: 'skills/reference/scripts',
+		entry: { reference: 'src/references/reference.skill-script.ts' },
+		fixedExtension: true,
+		dts: false,
+		clean: false,
+		minify: true,
+		// One file: a copied-out skill folder has no sibling chunks to resolve a dynamic import from.
+		// `keepNames`: clibuilder tells a zod array argument from a scalar by its constructor's name,
+		// which minifying renames.
+		outputOptions: { codeSplitting: false, keepNames: true },
+		define: { __PACKAGE_NAME__: JSON.stringify(name), __PACKAGE_VERSION__: JSON.stringify(version) },
+		// jsonc-parser (through clibuilder) defaults to a UMD build whose `require()` calls rolldown
+		// can't follow; its ESM build is unlisted in `exports` but resolves as a direct subpath.
+		alias: { 'jsonc-parser': 'jsonc-parser/lib/esm/main.js' },
+		deps: { alwaysBundle: [/.*/], onlyBundle: false },
+		banner: {
+			js: `#!/usr/bin/env node
+// Generated from packages/agent-harness/src/references/reference.skill-script.ts by \`pnpm build\`
+// — do not edit. Runs \`agent-harness reference\` from this bundle; it needs no node_modules.
+`,
+		},
 	},
 ])

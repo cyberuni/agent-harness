@@ -14,5 +14,6 @@
 		"cursor",
 		"codex",
 		"copilot-cli"
-	]
+	],
+	"skills": "./skills/"
 }

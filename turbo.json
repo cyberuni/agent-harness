@@ -7,7 +7,7 @@
 			"outputs": []
 		},
 		"build": {
-			"outputs": ["dist/**"],
+			"outputs": ["dist/**", "skills/*/scripts/*.mjs"],
 			"dependsOn": ["^build"]
 		},
 		"check": {

@@ -2,6 +2,8 @@ export type {
 	ReferenceCommandOptions,
 	ReferenceCommands,
 	ReferenceCreateReport,
+	ReferenceDeleteNext,
+	ReferenceDeleteReport,
 	ReferenceListReport,
 	ReferenceSearchReport,
 	ReferenceShowEntry,

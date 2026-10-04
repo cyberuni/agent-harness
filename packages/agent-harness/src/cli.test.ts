@@ -48,6 +48,16 @@ describe('run', () => {
 		expect(stdout).toHaveBeenCalledWith('# Probe\n')
 	})
 
+	it('reads the references of the host it is given, as the skill script passes its own', async () => {
+		const host = tempRoot()
+		mkdirSync(join(host, 'references'), { recursive: true })
+		writeFileSync(join(host, 'references', 'host-probe.md'), '## Host\n')
+
+		const args = ['node', 'reference.mjs', 'reference', 'show', 'host-probe', '--root', tempRoot()]
+		expect(await run(args, { name: 'host-plugin', version: '9.9.9', root: host })).toBe(0)
+		expect(stdout).toHaveBeenCalledWith('## Host\n')
+	})
+
 	it('returns the exit code a failing subcommand gives', async () => {
 		expect(await run(['node', 'agent-harness', 'reference', 'show', 'absent', '--root', tempRoot()])).toBe(1)
 	})

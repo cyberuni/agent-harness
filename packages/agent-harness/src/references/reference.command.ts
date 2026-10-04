@@ -1,6 +1,6 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, rmdirSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import type { cli } from 'clibuilder'
 import { command, exitCodes, z } from 'clibuilder'
 import {
@@ -64,6 +64,25 @@ export type ReferenceCreateReport = {
 	warnings: string[]
 	/** Only after a write: the name resolved again, the new file's step `used`. */
 	trace?: Omit<TraceEntry, 'description'>[]
+}
+
+/** What answers a name once its copy is gone. */
+export type ReferenceDeleteNext = {
+	status: ResolvedReference['status']
+	tier?: ReferenceTier
+	plugin?: string
+	path?: string
+	plugins?: string[]
+}
+
+export type ReferenceDeleteReport = {
+	name: string
+	scope: CreateScope
+	path: string
+	dryRun: boolean
+	next: ReferenceDeleteNext
+	/** The name resolved without the deleted file. */
+	trace: Omit<TraceEntry, 'description'>[]
 }
 
 export type ReferenceSearchReport = { query: string; references: SearchMatch[] | string }
@@ -376,10 +395,7 @@ function createCommand(layersFor: LayersFor): cli.Command {
 				const scope = parseScope(args.scope)
 				const template = readTemplate(args.template === undefined ? undefined : resolve(args.template))
 				const home = homedir()
-				const dir =
-					scope === 'project'
-						? projectReferencesDir(resolve(args.root ?? process.cwd()))
-						: join(home, '.agents', 'references')
+				const dir = scopeDir(scope, args.root, home)
 				const target = join(dir, `${name.name}.md`)
 				const display = (path: string) => collapseHome(home, path)
 				const layers = await layersFor(args, home)
@@ -427,6 +443,116 @@ function createCommand(layersFor: LayersFor): cli.Command {
 	})
 }
 
+function scopeDir(scope: CreateScope, root: string | undefined, home: string): string {
+	return scope === 'project'
+		? projectReferencesDir(resolve(root ?? process.cwd()))
+		: join(home, '.agents', 'references')
+}
+
+function nextOf(resolved: ResolvedReference, home: string): ReferenceDeleteNext {
+	const next: ReferenceDeleteNext = { status: resolved.status }
+	if (resolved.status === 'found') {
+		Object.assign(next, {
+			tier: resolved.tier,
+			plugin: resolved.plugin,
+			path: collapseHome(home, resolved.path as string),
+		})
+	}
+	if (resolved.status === 'ambiguous') next.plugins = resolved.plugins
+	return next
+}
+
+function describeNext(name: string, next: ReferenceDeleteNext): string {
+	if (next.status === 'found') return `"${name}" is then answered by the ${next.tier} copy ${next.path}.`
+	if (next.status === 'ambiguous') {
+		return `"${name}" is then held by more than one plugin: ${(next.plugins as string[]).join(', ')}.`
+	}
+	return `no copy of "${name}" is left in any tier.`
+}
+
+type DeleteArgs = CommonArgs & { name: string; scope: string | undefined; 'dry-run': boolean | undefined }
+
+function deleteCommand(layersFor: LayersFor): cli.Command {
+	return command({
+		name: 'delete',
+		description:
+			'Delete the project or user copy of a reference, and report which copy answers the name afterwards. Never deletes a plugin-shipped or managed copy.',
+		arguments: [{ name: 'name', description: 'Reference name, without the `.md` extension.', type: z.string() }],
+		options: {
+			root: rootOption,
+			scope: {
+				description:
+					'Tier to delete from: project (default), `.agents/references/` at the root, or user, `~/.agents/references/`.',
+				type: z.optional(z.string()),
+				default: 'project',
+			},
+			'dry-run': {
+				description: 'Print the file that would be deleted and what would answer the name then, and delete nothing.',
+				type: z.optional(z.boolean()),
+			},
+			format: {
+				description:
+					'Output format: text (default) writes the path, what answers next, and the trace; toon and json return an object.',
+				type: z.optional(z.string()),
+				default: 'text',
+			},
+		},
+		async run(args: DeleteArgs) {
+			try {
+				const format = parseFormat(args.format)
+				const name = parseReferenceName(args.name)
+				if (name.plugin !== undefined) {
+					throw new Error(
+						`a project or user copy is held under the bare name; ask for "${name.name}". A plugin's copy is never deleted.`,
+					)
+				}
+				const scope = parseScope(args.scope)
+				const home = homedir()
+				const dir = scopeDir(scope, args.root, home)
+				const display = (path: string) => collapseHome(home, path)
+				const layers = await layersFor(args, home)
+				const before = resolveReference(name, layers, { display })
+				const step = before.trace[layers.findIndex((layer) => layer.dir === dir)]
+				if (!step?.found) {
+					const answer = before.status === 'found' ? ` ${describeNext(name.name, nextOf(before, home))}` : ''
+					throw new Error(
+						`${display(join(dir, `${name.name}.md`))} does not exist, so there is no ${scope} copy of "${name.name}" to delete.${answer} Delete never removes a plugin-shipped or managed copy.`,
+					)
+				}
+				const target = step.path
+				const dryRun = Boolean(args['dry-run'])
+				if (!dryRun) {
+					rmSync(target)
+					// A folder-form copy leaves its folder behind; remove it only when nothing else is in it.
+					if (dirname(target) !== dir) {
+						try {
+							rmdirSync(dirname(target))
+						} catch {}
+					}
+				}
+				const after = resolveReference(name, layers, { display, without: dryRun ? target : undefined })
+				const report: ReferenceDeleteReport = {
+					name: name.name,
+					scope,
+					path: display(target),
+					dryRun,
+					next: nextOf(after, home),
+					trace: traceOf(after, home),
+				}
+				if (format !== 'text') writeResult(report, format)
+				else {
+					process.stdout.write(
+						`${report.path}\n\n${dryRun ? 'would delete' : 'deleted'}. ${describeNext(report.name, report.next)}\n\n${renderText({ trace: report.trace })}\n`,
+					)
+				}
+				return exitCodes.success
+			} catch (error) {
+				return fail(error, 'Reference deletion failed.')
+			}
+		},
+	})
+}
+
 export type ReferenceCommandOptions = {
 	/** The plugin running the command; see `ReferenceLayerOptions['plugin']`. */
 	plugin?: ReferencePlugin | undefined
@@ -438,6 +564,7 @@ export type ReferenceCommands = {
 	search: cli.Command
 	where: cli.Command
 	create: cli.Command
+	delete: cli.Command
 }
 
 /** A factory, so each host CLI names itself as the plugin whose own references come first. */
@@ -449,15 +576,16 @@ export function createReferenceCommands({ plugin }: ReferenceCommandOptions = {}
 		search: searchCommand(layersFor),
 		where: whereCommand(layersFor),
 		create: createCommand(layersFor),
+		delete: deleteCommand(layersFor),
 	}
 }
 
 export function createReferenceCommand(options: ReferenceCommandOptions = {}): cli.Command {
-	const { show, list, search, where, create } = createReferenceCommands(options)
+	const { show, list, search, where, create, delete: remove } = createReferenceCommands(options)
 	return command({
 		name: 'reference',
 		description:
-			'Read on-demand reference documents by name, layered across the managed, project, user, and plugin tiers, and start a new one in the project or user tier.',
-		commands: [show, list, search, where, create],
+			'Read on-demand reference documents by name, layered across the managed, project, user, and plugin tiers, and start or delete one in the project or user tier.',
+		commands: [show, list, search, where, create, remove],
 	})
 }

@@ -38,6 +38,7 @@
 		"LICENSE",
 		"bin",
 		"dist",
+		"skills",
 		"plugin.json",
 		".claude-plugin",
 		".cursor-plugin",

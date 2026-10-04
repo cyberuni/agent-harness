@@ -5,6 +5,8 @@
 		"includes": [
 			"!!**/bin",
 			"!!**/dist",
+			// The skill script, bundled by `pnpm build`.
+			"!!**/skills/*/scripts/*.mjs",
 			"!!**/node_modules",
 			"!!.turbo",
 			"!!**/.astro",
