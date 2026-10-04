@@ -254,7 +254,7 @@ const rules: readonly DetectionRule[] = [
 				name: 'AI_AGENT',
 				matches: (value) => value === 'openhands',
 				description:
-					'OpenHands sets AI_AGENT=openhands for terminal tool and hook commands when AI_AGENT is unset; other vendors use the name with other values',
+					'OpenHands (SDK 1.40.1 and later) sets AI_AGENT=openhands for terminal tool and hook commands when AI_AGENT is unset; other vendors use the name with other values',
 				research: 'E-OH-D1',
 			},
 		],

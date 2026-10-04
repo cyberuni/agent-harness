@@ -55,7 +55,8 @@ It reports `unknown` instead of guessing:
 - for `AGENT` and `AI_AGENT`, which several vendors set (only the exact value `AI_AGENT=openhands`
   counts), and for `OPENCODE=1` alone, which Kilo Code, an OpenCode fork, also sets;
 - in contexts where a harness sets nothing of its own: Codex, Gemini CLI, and Qwen Code hooks, Qwen
-  Code, Crush, OpenHands, and Auggie MCP servers, Auggie shell commands, and the Cline CLI;
+  Code, Crush, OpenHands, and Auggie MCP servers, Auggie shell commands, OpenHands CLI 1.16.0 shell
+  commands (its SDK predates `AI_AGENT=openhands`), and the Cline CLI;
 - for harnesses with no verified signal, such as Goose, Antigravity, Rovo Dev, Kiro, Amp, Factory
   Droid, Devin Desktop, and Warp. The research records why for each one.
 
