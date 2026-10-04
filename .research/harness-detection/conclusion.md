@@ -224,16 +224,17 @@ paths to the home directory. Admin, bundled, and plugin skills are left out.
 | Copilot in VS Code | `.github/skills`, `.claude/skills`, `.agents/skills` | `.copilot/skills`, `.claude/skills`, `.agents/skills` | Yes | E-VSC-P1 |
 | OpenCode | `.opencode/skills`, `.claude/skills`, `.agents/skills` | `.config/opencode/skills`, `.claude/skills`, `.agents/skills` | Yes | E-OC-S1 |
 | Gemini CLI | `.agents/skills`, `.gemini/skills` (the alias wins a name clash) | same | Yes | E-GEM-L1 |
-| Cline | `.cline/skills`, `.clinerules/skills`, `.claude/skills` | `.cline/skills` | No | E-CLINE-S1 |
-| Auggie CLI | `.augment/skills` | `.augment/skills` | No | E-AUG-S1 |
-| Kilo Code | Not confirmed: the documented `.agents/skills` is disputed on the vendor's tracker | — | Contested | E-KILO-L1 |
+| Cline | `.cline/skills`, `.clinerules/skills`, `.claude/skills`, `.agents/skills` | `.cline/skills`, `.agents/skills` | Yes, in source; the docs do not name it | E-CLINE-S1, E-CLINE-S3 |
+| Auggie CLI | `.augment/skills`, `.claude/skills`, `.agents/skills` (that precedence) | same | Yes | E-AUG-S4 |
+| Kilo Code | `.kilo/skills`, `.agents/skills`, `.claude/skills` (the VS Code extension reads `.claude/skills` only with Claude Code compatibility on) | same | Yes | E-KILO-L2 |
 | Qwen Code | Not confirmed: the source names the `.agents` root, not the directory under it | — | — | E-QWEN-S1 |
 | Crush, OpenHands | Not recorded | — | — | — |
 
 `vercel-labs/skills` records one project directory per agent and calls an agent universal when that
-one is `.agents/skills`. It lists Cline as universal, but Cline's docs name no `.agents/skills`
-path (E-CLINE-S1, re-checked 2026-09-28). The drift check reports that disagreement until the
-research settles it.
+one is `.agents/skills`. It lists Cline as universal. Cline's docs name no `.agents/skills` path,
+but both its VS Code extension and the SDK its CLI runs on read it at both scopes (E-CLINE-S3,
+2026-10-04), so `skillsDirectories('cline')` records it and the drift baseline marks it
+source-backed.
 
 ## R7. Installed plugin folders
 
@@ -311,12 +312,17 @@ documents only zero and non-zero, and a capped run is told apart by its `result`
 `scripts/vendor-baseline.json` with the evidence ID and confidence each backs. A section that
 cannot be found or names no paths fails the run. The `vercel-labs/skills` registry stays in as
 corroboration. The skills baseline holds what the evidence records, so a path the docs add shows up
-as a finding until the research accepts it. On 2026-09-28 that is the case for two harnesses:
+as a finding until the research accepts it. A source's `sourceBacked` entry lists directories the
+vendor's code reads but its docs do not name, with the evidence that shows it; Cline's
+`.agents/skills` is the only one (E-CLINE-S3).
 
-- The Auggie CLI skills page now also names `.claude/skills` and `.agents/skills`, project and user,
-  while E-AUG-S1 and `skillsDirectories('augment')` record `.augment/skills` only.
-- The Kilo Code skills page now names `.kilo/skills`, `.claude/skills`, `.github/skills`, and
-  `.well-known/skills` besides `.agents/skills`, and user directories. E-KILO-L1 is still contested.
+The 2026-09-28 Auggie CLI and Kilo Code disagreements were settled on 2026-10-04 (E-AUG-S4,
+E-KILO-L2). Kilo's page also names `.github/skills` and `.well-known/skills`, but only as examples
+of the `skills.paths` and `skills.urls` settings, so neither is a default directory.
+
+A lead, not yet evidence: Kilo's skills page now says every loaded skill is also a slash command
+(`/name`, or `/name:skill` when a command has the name), which contradicts E-KILO-S2 and
+`skillInvocation('kilo')`. Not yet researched.
 
 A lead, not yet evidence: while finding the R8 pages, the Qwen Code, Crush, and OpenHands docs were
 seen to name skills directories, where `skillsDirectories()` returns `undefined`. Their skills pages
