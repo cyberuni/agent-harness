@@ -1,13 +1,11 @@
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 import { expect, it } from 'vitest'
 
-// TypeScript 6 defaults `types` to `[]`, so a consumer without `@types/node` in its types must
-// still be able to load the published declarations. `pnpm test` builds `dist` first.
-it('the published declarations type-check without @types/node', () => {
+function typeCheck(declarations: string) {
 	const dir = mkdtempSync(join(tmpdir(), 'agent-harness-types-'))
 	try {
 		writeFileSync(
@@ -21,12 +19,23 @@ it('the published declarations type-check without @types/node', () => {
 					module: 'NodeNext',
 					moduleResolution: 'NodeNext',
 				},
-				files: [resolve(import.meta.dirname, '../dist/index.d.ts')],
+				files: [resolve(import.meta.dirname, '../dist', declarations)],
 			}),
 		)
 		const tsc = resolve(import.meta.dirname, '../node_modules/.bin/tsc')
-		expect(() => execFileSync(tsc, ['-p', join(dir, 'tsconfig.json')], { encoding: 'utf8' })).not.toThrow()
+		execFileSync(tsc, ['-p', join(dir, 'tsconfig.json')], { encoding: 'utf8' })
 	} finally {
 		rmSync(dir, { recursive: true, force: true })
 	}
+}
+
+it('exports the root and ./commands, and keeps command-output internal', () => {
+	const manifest = JSON.parse(readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8'))
+	expect(Object.keys(manifest.exports)).toEqual(['.', './commands', './package.json'])
+})
+
+// TypeScript 6 defaults `types` to `[]`, so a consumer without `@types/node` in its types must
+// still be able to load the published declarations. `pnpm test` builds `dist` first.
+it.each(['index.d.ts', 'commands.d.ts'])('the published %s type-checks without @types/node', (declarations) => {
+	expect(() => typeCheck(declarations)).not.toThrow()
 })

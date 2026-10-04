@@ -28,8 +28,7 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/index.js",
-		"./reference-command": "./dist/reference-command.js",
-		"./command-output": "./dist/command-output.js",
+		"./commands": "./dist/commands.js",
 		"./package.json": "./package.json"
 	},
 	"bin": {
