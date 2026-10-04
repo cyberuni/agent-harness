@@ -274,14 +274,19 @@ mapping is ignored with a warning.
 
 ### The reference command
 
-The package ships a `reference` command with `show`, `list`, `search`, `where`, and `create`
-subcommands:
+The package ships a `reference` command with `show`, `list`, `search`, `where`, `create`, and
+`delete` subcommands:
 
 ```sh
 npx -y @cyberuni/agent-harness reference show <name>... --root <repository root>
 npx -y @cyberuni/agent-harness reference list
 npx -y @cyberuni/agent-harness reference create <name> --scope project
+npx -y @cyberuni/agent-harness reference delete <name> --scope project --dry-run
 ```
+
+`delete` removes only the copy in `.agents/references/` (`--scope project`) or
+`~/.agents/references/` (`--scope user`), and reports which copy answers the name afterwards: the
+plugin's copy, once a project override of it is gone. It refuses a plugin-shipped or managed copy.
 
 Output is [TOON](https://github.com/toon-format/toon) by default, for an agent to parse; pass
 `--format json` or `--format text`. A CLI built on [`clibuilder`](https://www.npmjs.com/package/clibuilder)
@@ -291,6 +296,27 @@ can host the same command under its own plugin name, imported from the `./comman
 import { createReferenceCommand } from '@cyberuni/agent-harness/commands'
 
 app.command(createReferenceCommand({ plugin: { name: 'my-plugin', root: pluginRoot } }))
+```
+
+### The `reference` skill
+
+The package is also an agent plugin, `agent-harness`, that ships a `reference` skill. Type
+`/reference` (`/agent-harness:reference` in Claude Code) to load, create, update, delete, find, or
+inspect a reference, or to wire a skill to load one. The skill writes or deletes a file only after
+you approve it. It runs the command from its bundled `scripts/reference.mjs`, which needs no
+`node_modules`.
+
+```text
+/plugin marketplace add cyberuni/cyberplace
+/plugin install agent-harness@cyberplace
+```
+
+A skill that needs a reference names it in one line, as the skill's
+[`README.md`](https://github.com/cyberuni/agent-harness/blob/main/packages/agent-harness/skills/reference/README.md)
+shows:
+
+```text
+Load `skill-design` with the `reference` skill in the `agent-harness` plugin.
 ```
 
 ## Why this exists

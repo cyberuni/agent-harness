@@ -23,6 +23,48 @@ From a shell, or from an agent:
 npx -y @cyberuni/agent-harness reference show agent-readiness-weights
 ```
 
+## The reference command
+
+| Subcommand | Does |
+| --- | --- |
+| `show <name>...` | Prints each reference; `--trace` says why the name resolved to the copy it did |
+| `list` | Every layer, and every reference at each layer that holds it, marked used or shadowed |
+| `search <query>` | References matching a query by name, description, tags, heading, or body |
+| `where <name>` | The project and user files an override can be written to |
+| `create <name>` | Starts a reference in the project or user tier, marked `merge-sections` when it overrides a copy below |
+| `delete <name>` | Deletes the project or user copy, and reports which copy answers the name afterwards |
+
+`create` and `delete` take `--scope project` (the default, `.agents/references/`) or `--scope user`
+(`~/.agents/references/`), and `--dry-run` to print what they would do. Neither ever writes to a
+plugin's or a managed folder: `delete` refuses a name with no copy in its scope, and names the copy
+that answers instead. Deleting a project override brings back the copy below it, such as the
+plugin's.
+
+## The reference skill
+
+The package is also an agent plugin, `agent-harness`, that ships a `reference` skill. Type
+`/reference` (`/agent-harness:reference` in Claude Code) to run it.
+
+| Mode | When |
+| --- | --- |
+| Load | another skill names references to load with this skill |
+| Create | writing a new reference for a project, for the user, or for a plugin to ship |
+| Update | changing a reference: the user's own in place, a plugin's by an override |
+| Delete | removing a project or user copy, after saying which copy answers the name then |
+| Find | `search` for a topic, or `list` every reference |
+| Inspect | `show`, `show --trace`, or `where` |
+| Wire a skill | giving a skill the line that loads a reference |
+
+The skill shows each file and its path, and writes or deletes it only on your approval. It never
+edits or deletes a reference a plugin ships; it writes an override instead. Load runs only the
+skill's bundled `scripts/reference.mjs`, never a package runner.
+
+A skill loads a reference by naming it in one line:
+
+```text
+Load `agent-readiness-weights` with the `reference` skill in the `agent-harness` plugin.
+```
+
 ## Where a reference is read from
 
 Layers are read highest precedence first.
