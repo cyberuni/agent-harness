@@ -96,3 +96,14 @@ alias for both tiers, so E-GEM-L1 stands and the finding is closed.
 The new drift watch surfaced two skills-axis disagreements, recorded under "Drift watch" in the
 conclusion and left open for research: the Auggie CLI and Kilo Code skills pages now name more
 directories than E-AUG-S1 and E-KILO-L1 record.
+
+## 2026-10-04 — R9 headless invocation
+
+For [cyberuni/cyber-sdd#69](https://github.com/cyberuni/cyber-sdd/issues/69), which moves a
+headless agent runner into ACED. Added R9 and the `H` evidence rows: Claude Code 2.1.289 and Codex
+0.159.3 from vendor docs, local `--help`, and Codex source; Copilot CLI 1.0.90 and cursor-agent
+2026.09.28 from docs and local help; Gemini CLI and Qwen Code from their docs in the vendor repos.
+Confirmed by direct experiment that Claude Code rejects `--output-format stream-json` without
+`--verbose` (E-CC-H4), and read Codex's session path from source at 4ad985e (E-CODEX-H4). OpenCode,
+Kilo Code, Cline, Crush, OpenHands, and the Auggie CLI have one-shot modes but stay `unknown` until
+their pages are read directly.
