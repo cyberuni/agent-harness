@@ -4,22 +4,33 @@ import { fileURLToPath } from 'node:url'
 import { cli, exitCodes } from 'clibuilder'
 import { createReferenceCommand } from './references/reference.command.js'
 
-// A factory, not a module-level constant: `cli()` builds state, and state built at import time
-// would be shared by every later call in the process.
-function app() {
+/** Who runs the CLI: the package's name and version, and the folder its own `references/` sit in. */
+export type CliHost = { name: string; version: string; root: string }
+
+/**
+ * Read from `../package.json`, which resolves from `src/cli.ts` and `dist/cli.js` alike. The skill
+ * script, shipped with no package tree beside it, passes its own host instead.
+ */
+function packageHost(): CliHost {
 	const manifest = new URL('../package.json', import.meta.url)
 	const { name, version } = JSON.parse(readFileSync(manifest, 'utf8')) as { name: string; version: string }
+	return { name, version, root: dirname(fileURLToPath(manifest)) }
+}
+
+// A factory, not a module-level constant: `cli()` builds state, and state built at import time
+// would be shared by every later call in the process.
+function app({ name, version, root }: CliHost) {
 	return cli({
 		name: 'agent-harness',
 		version,
 		description: 'Work with the AI agent harness running here: read its layered reference documents.',
-	}).command(createReferenceCommand({ plugin: { name, root: dirname(fileURLToPath(manifest)) } }))
+	}).command(createReferenceCommand({ plugin: { name, root } }))
 }
 
 /** argv in, exit code out — returned rather than written, so a caller that is not the process can act on it. */
-export async function run(argv: string[]): Promise<number> {
+export async function run(argv: string[], host: CliHost = packageHost()): Promise<number> {
 	try {
-		const code = await app().parse<number | undefined>(argv)
+		const code = await app(host).parse<number | undefined>(argv)
 		return typeof code === 'number' ? code : exitCodes.success
 	} catch (error) {
 		// stderr, not stdout — stdout carries TOON an agent parses.

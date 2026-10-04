@@ -12,6 +12,7 @@
 	"keywords": ["agent-harness", "claude-code", "cursor", "codex", "copilot-cli"],
 	"extensions": {
 		"org.cyberuni.universal-plugin": {
+			"skills": "./skills/",
 			"harnesses": {
 				"claude-code": {},
 				"cursor": {},
