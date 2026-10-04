@@ -9,6 +9,19 @@ export type { HarnessId } from './harness/harness-id.js'
 export { harnessIds } from './harness/harness-id.js'
 export type { Platform } from './harness/platform.js'
 export type {
+	HeadlessCommand,
+	HeadlessCommandOptions,
+	HeadlessExitCode,
+	HeadlessInvocation,
+	HeadlessMode,
+	HeadlessOutputFormat,
+	HeadlessPermission,
+	HeadlessTranscript,
+	HeadlessUnavailable,
+	HeadlessUsage,
+} from './headless/headless-invocation.js'
+export { headlessCommand, headlessInvocation } from './headless/headless-invocation.js'
+export type {
 	ManagedPolicyKind,
 	ManagedPolicyLocation,
 	ManagedPolicyOptions,
