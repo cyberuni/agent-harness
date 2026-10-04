@@ -110,6 +110,14 @@ and one hook, so no model account was needed. This corrects E-OH-D7:
 The detection rules are unchanged. What changed is which OpenHands builds the `AI_AGENT` rule
 reaches.
 
+## 2026-09-28 — live capture attempt for #33
+
+Tried to capture live environments for the nine harnesses in "Wave 2: no verified signal". None
+could be run from this research's WSL machine: no CLI was installed, and Antigravity IDE and Warp
+were installed only as Windows GUI apps, which an agent cannot drive. This attempt added no evidence
+rows and changed no detection rule. Added a capture protocol to [topic.md](./topic.md) so a person at
+each harness can record a comparable capture. Its OpenHands row points at the CLI capture above.
+
 ## 2026-10-04 — R9 headless invocation
 
 For [cyberuni/cyber-sdd#69](https://github.com/cyberuni/cyber-sdd/issues/69), which moves a
