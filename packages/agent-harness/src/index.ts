@@ -28,9 +28,40 @@ export type {
 	InstalledPluginsResult,
 } from './plugins/installed-plugins.js'
 export { installedPlugins } from './plugins/installed-plugins.js'
+export { declaredDependencies, packageDir } from './plugins/package-dependencies.js'
 export { supportsPluginDependencies } from './plugins/plugin-dependencies.js'
 export type { PluginStorage, PluginStorageKind, PluginStorageLocation } from './plugins/plugin-storage.js'
 export { pluginStorage } from './plugins/plugin-storage.js'
+export type { LoadReferenceOptions } from './references/load-reference.js'
+export { loadReference } from './references/load-reference.js'
+export type { MatchKind, ReferenceListing, ReferenceRow, SearchMatch } from './references/reference-catalog.js'
+export { listReferences, searchReferences } from './references/reference-catalog.js'
+export type { MergeMode } from './references/reference-document.js'
+export type {
+	ReferenceLayer,
+	ReferenceLayerOptions,
+	ReferencePlugin,
+	ReferenceTier,
+} from './references/reference-layers.js'
+export {
+	deprecatedManagedGovernancesDir,
+	managedGovernancesDir,
+	managedReferencesDir,
+	projectReferenceLayers,
+	projectReferencesDir,
+	referenceLayers,
+} from './references/reference-layers.js'
+export type { ReferenceWhereReport, ReferenceWhereSlot, WhereOptions } from './references/reference-where.js'
+export { whereReference } from './references/reference-where.js'
+export type {
+	ReferenceName,
+	ReferenceStatus,
+	ResolvedReference,
+	ResolveOptions,
+	TraceEntry,
+	UsedLayer,
+} from './references/resolve-reference.js'
+export { parseReferenceName, referenceNames, resolveReference } from './references/resolve-reference.js'
 export type { PluginSkill, SkillInvocation } from './skills/skill-invocation.js'
 export { skillInvocation } from './skills/skill-invocation.js'
 export type { SkillsDirectories } from './skills/skills-directories.js'

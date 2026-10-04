@@ -2,7 +2,7 @@
 	"$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
 	"name": "agent-harness",
 	"version": "0.3.0",
-	"description": "Detect which AI agent harness is running and query its managed-policy locations, plugin storage, enabled plugins, and skill naming.",
+	"description": "A toolkit for working with AI agent harnesses: detect which one is running, query its managed-policy locations, plugin storage, enabled plugins, and skill naming, and resolve layered reference documents.",
 	"author": {
 		"name": "unional"
 	},

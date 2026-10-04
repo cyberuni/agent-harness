@@ -13,7 +13,7 @@ config migrator, ends up re-detecting which harness it is running under. Each do
 with its own guesses about env vars, file paths, and process trees, and each guess decays
 differently as vendors change their tooling.
 
-`agent-harness` is a zero-runtime-dependency TypeScript library that does this detection once, so
+`agent-harness` is a toolkit that does this detection once, depending on no other agent tool, so
 [`universal-plugin`](https://github.com/cyberuni/universal-plugin),
 [`buddy-agent-harness`](https://github.com/repobuddy/buddy-agent-harness), `repobuddy`, and
 `cyberlegion/cyber-mux` can share one implementation instead of maintaining four.
@@ -46,6 +46,11 @@ For a known harness it also answers what that harness holds:
 | `skillInvocation()` | How a user types a plugin's skill, such as `/my-plugin:review` |
 | `supportsPluginDependencies()` | Whether a plugin can declare other plugins it depends on |
 | `skillsDirectories()` | Which project and user directories the harness reads skills from |
+
+It also resolves reference documents: named Markdown files an agent reads on demand, layered across
+the managed, project (`.agents/references/`), user (`~/.agents/references/`), and plugin tiers.
+`loadReference()` resolves one, and the `agent-harness reference` command shows, lists, searches,
+and creates them.
 
 The [package readme](packages/agent-harness/readme.md) documents each function, the signal behind
 each harness, and the cases that report `unknown`.

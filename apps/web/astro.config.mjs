@@ -14,7 +14,10 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: 'Concepts',
-					items: [{ label: 'Harness detection', slug: 'concepts/harness-detection' }],
+					items: [
+						{ label: 'Harness detection', slug: 'concepts/harness-detection' },
+						{ label: 'Reference documents', slug: 'concepts/reference-documents' },
+					],
 				},
 			],
 		}),

@@ -2,10 +2,13 @@
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cyberuni/agent-harness/blob/main/LICENSE)
 
-Detect which AI agent harness is running — Claude Code, Cursor, Codex, GitHub Copilot CLI, OpenCode,
-Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, Cline, Crush, OpenHands, or the Auggie
-CLI — and query what it holds: its managed-policy locations, plugin storage, enabled plugins, and
-how it names plugin skills.
+A toolkit for working with AI agent harnesses. Detect which one is running — Claude Code, Cursor,
+Codex, GitHub Copilot CLI, OpenCode, Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code,
+Cline, Crush, OpenHands, or the Auggie CLI — query what it holds (its managed-policy locations,
+plugin storage, enabled plugins, and how it names plugin skills), and resolve the reference
+documents an agent reads on demand.
+
+It depends on no other agent tool, so any of them can build on it.
 
 **Status: pre-release.** Every fact this library encodes rests on
 [`.research/harness-detection`](https://github.com/cyberuni/agent-harness/tree/main/.research/harness-detection).
@@ -179,6 +182,85 @@ skillsDirectories('kilo') // undefined: not confirmed
 
 Project directories are relative to the project root, user directories to the home directory. Only
 directories read by default are listed; admin, bundled, and plugin skills are left out.
+
+## Reference documents
+
+A reference is a named Markdown document an agent reads on demand, such as a checklist or a set of
+weights a skill applies. Anyone can override one without editing the plugin that ships it: a
+project in `.agents/references/<name>.md`, a person in `~/.agents/references/<name>.md`.
+
+```ts
+import { loadReference } from '@cyberuni/agent-harness'
+
+const resolved = await loadReference('agent-readiness-weights', {
+	root: process.cwd(),
+	// The plugin calling the resolver: its own `references/` is the first plugin layer.
+	plugin: { name: 'my-plugin', root: pluginRoot },
+})
+if (resolved.status === 'found') console.log(resolved.content)
+```
+
+`status` is `found`, `missing`, or `ambiguous` (two plugins hold the name; ask for one of
+`resolved.plugins`, such as `my-plugin/agent-readiness-weights`). `trace` says what each layer held.
+
+Layers are read highest precedence first:
+
+| Tier | Folders |
+| --- | --- |
+| managed | the admin `references/` folder, and a `references/` beside each detected harness's managed-policy files |
+| project | `.agents/references/` in the root and each folder above it, up to the repository root |
+| user | `~/.agents/references/` |
+| plugin | the calling plugin's `references/`, each plugin the harness has enabled, then each package the project's `package.json` declares |
+
+In each folder, `<name>.md` answers first, then `<name>/README.md`, `<name>/index.md`, and
+`<name>/SKILL.md`. Legacy `governances/` folders are still read, below the `references/` beside
+them.
+
+A document's frontmatter `merge` says how it combines with the layers below:
+
+- `first-wins` (the default): it replaces everything below.
+- `combine`: it is placed above the layers below, each kept whole.
+- `merge-sections`: its sections replace the same-titled sections below, matched by heading path,
+  and the sections it does not redefine are kept. Under a heading, `<!-- merge: combine -->` appends
+  to that section instead, and `<!-- merge: remove -->` deletes it.
+
+Frontmatter is read as YAML. `merge`, `description`, and `tags` are the keys the resolver reads;
+`resolved.metadata` holds every key, the higher layer winning. Frontmatter that is not a YAML
+mapping is ignored with a warning.
+
+| Function | Does |
+| --- | --- |
+| `loadReference(name, options)` | Resolves one name for a root, with every tier read |
+| `referenceLayers(options)` | Builds the ordered layers, to resolve several names against |
+| `resolveReference(name, layers)` | Resolves a parsed name (`parseReferenceName`) against layers |
+| `listReferences(layers)`, `referenceNames(layers)` | Every name the layers hold, with the status of each copy |
+| `searchReferences(query, layers)` | Names matching a query by name, description, heading, or body |
+| `whereReference(name, layers, options)` | The project and user files an override can be written to |
+| `managedReferencesDir()`, `projectReferencesDir()`, `projectReferenceLayers()` | Single folders and layers |
+| `declaredDependencies()`, `packageDir()` | A manifest's declared packages, and where each is installed |
+
+### The reference command
+
+The package ships a `reference` command with `show`, `list`, `search`, `where`, and `create`
+subcommands:
+
+```sh
+npx -y @cyberuni/agent-harness reference show <name>... --root <repository root>
+npx -y @cyberuni/agent-harness reference list
+npx -y @cyberuni/agent-harness reference create <name> --scope project
+```
+
+Output is [TOON](https://github.com/toon-format/toon) by default, for an agent to parse; pass
+`--format json` or `--format text`. A CLI built on [`clibuilder`](https://www.npmjs.com/package/clibuilder)
+can host the same command under its own plugin name:
+
+```ts
+import { createReferenceCommand } from '@cyberuni/agent-harness/reference-command'
+
+app.command(createReferenceCommand({ plugin: { name: 'my-plugin', root: pluginRoot } }))
+```
+
+`@cyberuni/agent-harness/command-output` holds the encoders the command writes with.
 
 ## Why this exists
 
