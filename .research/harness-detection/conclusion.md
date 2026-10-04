@@ -2,9 +2,10 @@
 
 ## Last updated
 
-2026-09-28. Versions checked: Claude Code 2.1.283, cursor-agent 2026.07.01-41b2de7, codex-cli
-0.153.4 (source at openai/codex b8d5e3f, and rust-v0.153.4 for R7), GitHub Copilot CLI 1.0.83 (1.0.88
-for R7).
+2026-10-04 (R9). Versions checked: Claude Code 2.1.283 (2.1.289 for R9), cursor-agent
+2026.07.01-41b2de7 (2026.09.28-64d2043 for R9), codex-cli 0.153.4 (source at openai/codex b8d5e3f,
+rust-v0.153.4 for R7, and 0.159.3 with source at 4ad985e for R9), GitHub Copilot CLI 1.0.83 (1.0.88
+for R7, 1.0.90 for R9).
 
 Wave 1 of [#6](https://github.com/cyberuni/agent-harness/issues/6), also 2026-09-26, read from
 source at pinned commits: OpenCode (anomalyco/opencode b471c2b4), Kilo Code (Kilo-Org/kilocode
@@ -22,8 +23,8 @@ shipped binary.
 How can a process tell which agent harness it runs under — Claude Code, Cursor, Codex, GitHub
 Copilot CLI, OpenCode, Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code, Cline, Crush,
 OpenHands, or the Auggie CLI — and, for that harness, where do its plugins live, which plugins are
-enabled, where does managed policy live, how does it name plugin skills, and can plugins depend on
-each other?
+enabled, where does managed policy live, how does it name plugin skills, can plugins depend on
+each other, and how is it run headless?
 
 ## Verdict
 
@@ -280,6 +281,27 @@ directory. This is the second axis the drift check watches; the library does not
 | OpenHands | `AGENTS.md`, also `CLAUDE.md` and `GEMINI.md` | — | Yes | E-OH-I1 |
 | Auggie CLI | `CLAUDE.md`, `AGENTS.md`, `.augment-guidelines`, `.augment/rules/` | `.augment/rules/` | Yes | E-AUG-I1 |
 
+## R9. Headless invocation
+
+How to run one prompt with no user present, for a runner that measures an agent (cyber-sdd#69) or
+spawns one. `headlessInvocation()` encodes the rows marked supported. The others either have no
+headless mode or have one whose flags were read only through a summarizing fetch or from source
+with no vendor doc, so the library reports them as `unknown` rather than guess.
+
+| Harness | One-shot argv | Unattended permission | Usage in output | Transcript | Exit codes | Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| Claude Code | `claude -p <prompt>` | `--permission-mode bypassPermissions` | `result` message: `usage`, `total_cost_usd` (`stream-json` needs `--verbose`) | `~/.claude/projects/<project>/<session-id>.jsonl` | 0 / non-zero; read the `result` subtype | E-CC-H1–H6 |
+| Codex | `codex exec <prompt>` | `--dangerously-bypass-approvals-and-sandbox` | `--json`: `usage` on each `turn.completed`, summed; no cost | `~/.codex/sessions/<yyyy>/<mm>/<dd>/rollout-*.jsonl` | 0 / 1 (source) | E-CODEX-H1–H5 |
+| Copilot CLI | `copilot -p <prompt>` | `--allow-all` | Not documented; `--usage-output-file` | `~/.copilot/session-state/<id>/events.jsonl` | Not documented for `-p` | E-COPILOT-H1–H3 |
+| Cursor | `cursor-agent -p <prompt>` | `--force` | None documented | Not documented | 0 / 1 (example only) | E-CUR-H1–H3 |
+| Gemini CLI | `gemini -p <prompt>` | `--approval-mode yolo` | `stats` / `result` event; fields not documented | `~/.gemini/tmp/<project_hash>/chats/` | 0, 1, 42, 53 | E-GEM-H1–H3 |
+| Qwen Code | `qwen -p <prompt>` | `--approval-mode yolo` | `result` message `usage`; fields not documented | `~/.qwen/projects/<sanitized-cwd>/chats/` | 53, 55, 130 | E-QWEN-H1–H2 |
+| OpenCode, Kilo Code, Cline, Crush, OpenHands, Auggie CLI | Each has a one-shot mode | — | — | — | — | E-OC-H1, E-KILO-H1, E-CLINE-H1, E-CRUSH-H1, E-OH-H1, E-AUG-H1 |
+| Copilot in VS Code | None documented | — | — | — | — | E-VSC-H1 |
+
+Only Claude Code reports a dollar cost. Exit codes are a weak signal across the board: Claude Code
+documents only zero and non-zero, and a capped run is told apart by its `result` subtype.
+
 ## Drift watch
 
 `scripts/harness-drift.mjs` watches one primary vendor docs section per harness and axis, listed in
@@ -345,5 +367,8 @@ The survey behind #6 reported five products as gone. Checked against vendor sour
   one, and for OpenHands under the OpenHands CLI binary, whose shell tool is inferred to be the SDK's
   (E-OH-D7).
 - How the Auggie CLI types a plugin's skill: `/<skill>` or `/<plugin>:<skill>` (E-AUG-S3).
+- R9: Copilot CLI's `-p --output-format json` event schema and `--usage-output-file` fields, and
+  Cursor's transcript location, need one real run each to record. Whether `cursor-agent -p` writes
+  files without `--force` is contested between its help and its headless page (E-CUR-H1).
 - Most wave-1 facts are source reads. A vendor docs page for the detection variables was found only
   for VS Code, and that page names the wrong variable (E-VSC-D6).

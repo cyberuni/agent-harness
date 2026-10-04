@@ -5,8 +5,8 @@
 A toolkit for working with AI agent harnesses. Detect which one is running — Claude Code, Cursor,
 Codex, GitHub Copilot CLI, OpenCode, Kilo Code, Gemini CLI, Qwen Code, GitHub Copilot in VS Code,
 Cline, Crush, OpenHands, or the Auggie CLI — query what it holds (its managed-policy locations,
-plugin storage, enabled plugins, and how it names plugin skills), and resolve the reference
-documents an agent reads on demand.
+plugin storage, enabled plugins, how it names plugin skills, and how to run it headless), and
+resolve the reference documents an agent reads on demand.
 
 It depends on no other agent tool, so any of them can build on it.
 
@@ -182,6 +182,38 @@ skillsDirectories('kilo') // undefined: not confirmed
 
 Project directories are relative to the project root, user directories to the home directory. Only
 directories read by default are listed; admin, bundled, and plugin skills are left out.
+
+## Headless runs
+
+How to run a harness on one prompt with no user present: the command, the model and permission
+flags, the output formats and where token usage and cost appear in them, the transcript location,
+and the documented exit codes. The library only describes the run; starting the process is up to
+you.
+
+```ts
+import { headlessCommand, headlessInvocation } from '@cyberuni/agent-harness'
+
+headlessCommand('claude-code', {
+  prompt: 'Fix the failing test',
+  model: 'sonnet',
+  permission: 'unattended',
+  outputFormat: 'stream-json',
+})
+// { executable: 'claude', args: ['-p', '--model', 'sonnet', '--permission-mode', 'bypassPermissions',
+//   '--output-format', 'stream-json', '--verbose', 'Fix the failing test'] }
+
+const codex = headlessInvocation('codex')
+// codex.outputFormats[1]: { name: 'jsonl', args: ['--json'],
+//   usage: { event: 'turn.completed', tokens: 'usage', accumulate: 'sum' } } (no dollar cost)
+
+headlessInvocation('vscode-copilot').supported // false: no headless mode
+headlessInvocation('opencode').supported // 'unknown': a one-shot mode exists, but its flags are not verified
+```
+
+Claude Code, Codex, Copilot CLI, Cursor, Gemini CLI, and Qwen Code are covered. `permission:
+'unattended'` lets the run edit files and run commands without asking, so use it only in a
+throwaway checkout. Exit codes are a weak signal: Claude Code documents only zero and non-zero, and
+a run stopped by a turn or budget cap is told apart by the `result` message's `subtype`.
 
 ## Reference documents
 
