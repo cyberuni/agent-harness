@@ -178,7 +178,7 @@ import { skillsDirectories } from '@cyberuni/agent-harness'
 
 skillsDirectories('claude-code') // { project: ['.claude/skills'], user: ['.claude/skills'], research: ['E-CC-L1'] }
 skillsDirectories('codex')?.project.includes('.agents/skills') // true
-skillsDirectories('kilo') // undefined: not confirmed
+skillsDirectories('qwen-code') // undefined: not confirmed
 ```
 
 Project directories are relative to the project root, user directories to the home directory. Only
