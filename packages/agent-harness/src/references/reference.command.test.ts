@@ -7,6 +7,7 @@ import {
 	createReferenceCommand,
 	createReferenceCommands,
 	type ReferenceCreateReport,
+	type ReferenceDeleteReport,
 	type ReferenceListReport,
 	type ReferenceSearchReport,
 	type ReferenceShowEntry,
@@ -85,6 +86,7 @@ const {
 	search: referenceSearchCommand,
 	where: referenceWhereCommand,
 	create: referenceCreateCommand,
+	delete: referenceDeleteCommand,
 } = createReferenceCommands({
 	plugin: { name: '@cyberuni/agent-harness', root: dirname(dirname(dirname(fileURLToPath(import.meta.url)))) },
 })
@@ -96,6 +98,7 @@ type ShowArgs = { root?: string; format?: string; trace?: boolean }
 type ListArgs = { root?: string; format?: string }
 type SearchArgs = { root?: string; format?: string }
 type WhereArgs = { root?: string; caller?: string; format?: string }
+type DeleteArgs = { root?: string; scope?: string; 'dry-run'?: boolean; format?: string }
 type CreateArgs = { root?: string; template?: string; scope?: string; 'dry-run'?: boolean; format?: string }
 
 function show(names: string[], args: ShowArgs = {}): Promise<number> {
@@ -128,6 +131,15 @@ function where(name: string, args: WhereArgs = {}): Promise<number> {
 
 function create(name: string, args: CreateArgs = {}): Promise<number> {
 	return (referenceCreateCommand as unknown as { run(value: CreateArgs & { name: string }): Promise<number> }).run({
+		format: 'text',
+		scope: 'project',
+		name,
+		...args,
+	})
+}
+
+function remove(name: string, args: DeleteArgs = {}): Promise<number> {
+	return (referenceDeleteCommand as unknown as { run(value: DeleteArgs & { name: string }): Promise<number> }).run({
 		format: 'text',
 		scope: 'project',
 		name,
@@ -1578,12 +1590,196 @@ describe('create', () => {
 	})
 })
 
+describe('delete', () => {
+	function report(): ReferenceDeleteReport {
+		return JSON.parse(written()) as ReferenceDeleteReport
+	}
+
+	it('deletes the project copy and reports that nothing answers the name then', async () => {
+		const root = repo()
+		const target = write(root, '.agents/references/onboarding.md', '## A\n')
+
+		expect(await remove('onboarding', { root, format: 'json' })).toBe(0)
+		expect(existsSync(target)).toBe(false)
+		expect(report()).toMatchObject({
+			name: 'onboarding',
+			scope: 'project',
+			path: target,
+			dryRun: false,
+			next: { status: 'missing' },
+		})
+		expect(report().trace.some((step) => step.found)).toBe(false)
+	})
+
+	it("reports the plugin's copy as answering once a project override is deleted", async () => {
+		const root = repo()
+		declareDependency(root, 'ledgerkit')
+		installDependency(root, 'ledgerkit', { 'ledgerkit.glossary': '## Terms\n\nplugin\n' })
+		const plugin = join(root, 'node_modules/ledgerkit/references/ledgerkit.glossary.md')
+		write(root, '.agents/references/ledgerkit.glossary.md', '---\nmerge: merge-sections\n---\n## Terms\n\nours\n')
+
+		expect(await remove('ledgerkit.glossary', { root, format: 'json' })).toBe(0)
+		expect(report().next).toEqual({ status: 'found', tier: 'plugin', plugin: 'ledgerkit', path: plugin })
+		expect(report().trace.find((step) => step.path === plugin)).toMatchObject({ outcome: 'used' })
+		expect(existsSync(plugin)).toBe(true)
+	})
+
+	it('deletes the user copy with --scope user, leaving the project copy', async () => {
+		const root = repo()
+		const project = write(root, '.agents/references/onboarding.md', '---\nmerge: merge-sections\n---\n## A\n')
+		const user = write(fakeHome.value, '.agents/references/onboarding.md', '## A\n')
+
+		expect(await remove('onboarding', { root, scope: 'user', format: 'json' })).toBe(0)
+		expect(existsSync(user)).toBe(false)
+		expect(existsSync(project)).toBe(true)
+		expect(report()).toMatchObject({
+			scope: 'user',
+			path: '~/.agents/references/onboarding.md',
+			next: { status: 'found', tier: 'project', path: project },
+		})
+	})
+
+	it('reports the file and what would answer on --dry-run, and deletes nothing', async () => {
+		const root = repo()
+		const target = write(root, '.agents/references/onboarding.md', '## A\n')
+		const user = write(fakeHome.value, '.agents/references/onboarding.md', '## A\n')
+
+		expect(await remove('onboarding', { root, 'dry-run': true, format: 'json' })).toBe(0)
+		expect(existsSync(target)).toBe(true)
+		expect(report()).toMatchObject({
+			dryRun: true,
+			next: { status: 'found', tier: 'user', path: `~${user.slice(fakeHome.value.length)}` },
+		})
+		expect(report().trace.find((step) => step.tier === 'project' && step.path.startsWith(root))).toMatchObject({
+			found: false,
+		})
+	})
+
+	it('says which copy answers in text, after the path', async () => {
+		const root = repo()
+		write(root, '.agents/references/onboarding.md', '## A\n')
+		write(fakeHome.value, '.agents/references/onboarding.md', '## A\n')
+
+		expect(await remove('onboarding', { root, 'dry-run': true })).toBe(0)
+		const [first, blank, summary, ...rest] = written().split('\n')
+		expect(first).toBe(join(root, '.agents/references/onboarding.md'))
+		expect(blank).toBe('')
+		expect(summary).toBe(
+			'would delete. "onboarding" is then answered by the user copy ~/.agents/references/onboarding.md.',
+		)
+		expect(rest.some((line) => line.startsWith('trace'))).toBe(true)
+
+		stdout.mockClear()
+		expect(await remove('onboarding', { root, scope: 'user' })).toBe(0)
+		expect(written().split('\n')[2]).toBe(
+			'deleted. "onboarding" is then answered by the project copy ' +
+				join(root, '.agents/references/onboarding.md') +
+				'.',
+		)
+	})
+
+	it('reports the plugins left holding an ambiguous name', async () => {
+		const root = repo()
+		write(root, 'package.json', JSON.stringify({ name: 'fixture', dependencies: { alpha: '1.0.0', beta: '1.0.0' } }))
+		installDependency(root, 'alpha', { glossary: '## A\n' })
+		installDependency(root, 'beta', { glossary: '## B\n' })
+		write(root, '.agents/references/glossary.md', '## Mine\n')
+
+		expect(await remove('glossary', { root, format: 'json' })).toBe(0)
+		expect(report().next).toEqual({ status: 'ambiguous', plugins: ['alpha/glossary', 'beta/glossary'] })
+
+		write(root, '.agents/references/glossary.md', '## Mine\n')
+		stdout.mockClear()
+		expect(await remove('glossary', { root, 'dry-run': true })).toBe(0)
+		expect(written()).toContain('held by more than one plugin: alpha/glossary, beta/glossary.')
+	})
+
+	it('deletes a folder-form copy and its folder once empty', async () => {
+		const root = repo()
+		const target = write(root, '.agents/references/onboarding/README.md', '## A\n')
+
+		expect(await remove('onboarding', { root, format: 'json' })).toBe(0)
+		expect(report().path).toBe(target)
+		expect(existsSync(dirname(target))).toBe(false)
+	})
+
+	it("keeps a folder-form copy's folder that still holds other files", async () => {
+		const root = repo()
+		const target = write(root, '.agents/references/onboarding/README.md', '## A\n')
+		const index = write(root, '.agents/references/onboarding/index.md', '## B\n')
+
+		expect(await remove('onboarding', { root, 'dry-run': true, format: 'json' })).toBe(0)
+		expect(report().next).toMatchObject({ status: 'found', tier: 'project', path: index })
+
+		stdout.mockClear()
+		expect(await remove('onboarding', { root, format: 'json' })).toBe(0)
+		expect(existsSync(target)).toBe(false)
+		expect(report().next).toMatchObject({ path: index })
+	})
+
+	it('refuses a name with no copy in the scope, naming the copy that answers and leaving it', async () => {
+		const root = repo()
+		declareDependency(root, 'ledgerkit')
+		installDependency(root, 'ledgerkit', { 'ledgerkit.glossary': '## Terms\n' })
+		const plugin = join(root, 'node_modules/ledgerkit/references/ledgerkit.glossary.md')
+
+		for (const dryRun of [false, true]) {
+			stderr.mockClear()
+			expect(await remove('ledgerkit.glossary', { root, 'dry-run': dryRun })).toBe(1)
+			const [line = ''] = stderrLines()
+			expect(line).toMatch(/^error: /)
+			expect(line).toContain(`answered by the plugin copy ${plugin}`)
+			expect(line).toContain('never removes a plugin-shipped or managed copy')
+		}
+		expect(stdout).not.toHaveBeenCalled()
+		expect(existsSync(plugin)).toBe(true)
+	})
+
+	it('refuses a name nothing holds', async () => {
+		const root = repo()
+
+		expect(await remove('onboarding', { root })).toBe(1)
+		expect(stderrLines()[0]).toContain('no project copy of "onboarding" to delete')
+	})
+
+	it('refuses a managed copy, which no scope reaches', async () => {
+		const root = repo()
+		const programData = tempDir('reference-programdata-')
+		await withPlatform('win32', programData, async () => {
+			const managed = write(managedReferencesDir('win32', programData), 'onboarding.md', '## A\n')
+
+			expect(await remove('onboarding', { root })).toBe(1)
+			expect(stderrLines()[0]).toContain('answered by the managed copy')
+			expect(existsSync(managed)).toBe(true)
+		})
+	})
+
+	it('refuses a plugin-qualified name, a path, and a scope other than project or user', async () => {
+		const root = repo()
+		write(root, '.agents/references/onboarding.md', '## A\n')
+
+		expect(await remove('ledgerkit/onboarding', { root })).toBe(1)
+		expect(stderrLines()[0]).toContain('bare name')
+		expect(await remove('../onboarding', { root })).toBe(1)
+		expect(await remove('onboarding', { root, scope: 'plugin' })).toBe(1)
+		expect(await remove('onboarding', { root, format: 'yaml' })).toBe(1)
+		expect(existsSync(join(root, '.agents/references/onboarding.md'))).toBe(true)
+	})
+
+	it('reports a failure it cannot read a message from, and resolves --root against the working directory', async () => {
+		failure.value = 'unavailable'
+
+		expect(await remove('never-deleted', { 'dry-run': true })).toBe(1)
+		expect(stderrLines()).toContain('error: Reference deletion failed.\n')
+	})
+})
+
 describe('createReferenceCommand', () => {
 	it('groups every subcommand under `reference`', () => {
 		const group = createReferenceCommand() as unknown as { name: string; commands: { name: string }[] }
 
 		expect(group.name).toBe('reference')
-		expect(group.commands.map(({ name }) => name)).toEqual(['show', 'list', 'search', 'where', 'create'])
+		expect(group.commands.map(({ name }) => name)).toEqual(['show', 'list', 'search', 'where', 'create', 'delete'])
 	})
 
 	it('reads no plugin layer of its own when no plugin runs it', async () => {

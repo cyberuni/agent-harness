@@ -86,6 +86,8 @@ type FoundDocument = {
 export type ResolveOptions = {
 	/** How a path is shown in a label or a warning — the command collapses the home directory. */
 	display?: (path: string) => string
+	/** A file read as absent, so `delete --dry-run` can report what answers once it is gone. */
+	without?: string | undefined
 }
 
 function tryRead(path: string): string | undefined {
@@ -117,7 +119,7 @@ export function layersFor(ref: ReferenceName, layers: readonly ReferenceLayer[])
 export function resolveReference(
 	ref: ReferenceName,
 	layers: readonly ReferenceLayer[],
-	{ display = (path) => path }: ResolveOptions = {},
+	{ display = (path) => path, without }: ResolveOptions = {},
 ): ResolvedReference {
 	const warnings: string[] = []
 	const trace: TraceEntry[] = []
@@ -140,7 +142,8 @@ export function resolveReference(
 			continue
 		}
 		const hits = candidateFiles(ref.name).flatMap((candidate) => {
-			const raw = tryRead(join(layer.dir, candidate))
+			const path = join(layer.dir, candidate)
+			const raw = path === without ? undefined : tryRead(path)
 			return raw === undefined ? [] : [{ candidate, raw }]
 		})
 		const [hit, ...ignored] = hits
