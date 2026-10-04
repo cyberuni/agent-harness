@@ -4,7 +4,8 @@ No agent-layer dependencies. This package sits under the agent tools (`universal
 `buddy-agent-harness`, `repobuddy`, `cyber-*`), so it must never depend on one of them or on
 another agent-layer package. Ordinary npm libraries (`yaml`, `clibuilder`, `@toon-format/toon`)
 are fine. The root entry (`.`) keeps its published declarations free of `@types/node` and of
-`clibuilder`; the reference command lives behind the `./reference-command` subpath.
+`clibuilder`; the clibuilder commands live behind the `./commands` subpath. `src/command-output` is internal:
+the bin and the commands write with it, but no subpath exports it.
 
 ## Screaming Architecture
 

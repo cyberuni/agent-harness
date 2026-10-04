@@ -16,8 +16,7 @@ export default defineConfig([
 		...shared,
 		entry: {
 			index: 'src/index.ts',
-			'reference-command': 'src/reference-command.ts',
-			'command-output': 'src/command-output.ts',
+			commands: 'src/commands.ts',
 		},
 		dts: true,
 		clean: true,

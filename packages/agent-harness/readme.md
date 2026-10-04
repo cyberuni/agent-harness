@@ -252,15 +252,13 @@ npx -y @cyberuni/agent-harness reference create <name> --scope project
 
 Output is [TOON](https://github.com/toon-format/toon) by default, for an agent to parse; pass
 `--format json` or `--format text`. A CLI built on [`clibuilder`](https://www.npmjs.com/package/clibuilder)
-can host the same command under its own plugin name:
+can host the same command under its own plugin name, imported from the `./commands` subpath:
 
 ```ts
-import { createReferenceCommand } from '@cyberuni/agent-harness/reference-command'
+import { createReferenceCommand } from '@cyberuni/agent-harness/commands'
 
 app.command(createReferenceCommand({ plugin: { name: 'my-plugin', root: pluginRoot } }))
 ```
-
-`@cyberuni/agent-harness/command-output` holds the encoders the command writes with.
 
 ## Why this exists
 
