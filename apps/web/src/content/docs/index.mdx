@@ -12,6 +12,9 @@ hero:
     - text: Harness detection
       link: /agent-harness/concepts/harness-detection/
       icon: right-arrow
+    - text: Reference documents
+      link: /agent-harness/concepts/reference-documents/
+      variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components'
@@ -29,7 +32,7 @@ const { harness } = detectHarness() // 'claude-code', 'codex', …, or 'unknown'
 if (harness !== 'unknown') skillsDirectories(harness)
 ```
 
-The package has no runtime dependencies.
+The package depends on no other agent tool, so any of them can build on it.
 
 ## What it answers
 
@@ -49,6 +52,10 @@ The package has no runtime dependencies.
 	<Card title="How skills are named and found" icon="document">
 		`skillInvocation()` returns what a user types to run a plugin skill, and
 		`skillsDirectories()` where a harness reads skills from.
+	</Card>
+	<Card title="Which reference applies" icon="open-book">
+		`loadReference()` resolves a named document across the managed, project, user, and plugin
+		tiers, merging each override as its frontmatter asks.
 	</Card>
 </CardGrid>
 

@@ -1,7 +1,7 @@
 {
 	"name": "@cyberuni/agent-harness",
 	"version": "0.3.0",
-	"description": "Detect which AI agent harness is running and query its managed-policy locations, plugin storage, enabled plugins, and skill naming.",
+	"description": "A toolkit for working with AI agent harnesses: detect which one is running, query its managed-policy locations, plugin storage, enabled plugins, and skill naming, and resolve layered reference documents.",
 	"keywords": [
 		"agent-harness",
 		"claude-code",
@@ -28,10 +28,16 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/index.js",
+		"./reference-command": "./dist/reference-command.js",
+		"./command-output": "./dist/command-output.js",
 		"./package.json": "./package.json"
+	},
+	"bin": {
+		"agent-harness": "./bin/agent-harness.mjs"
 	},
 	"files": [
 		"LICENSE",
+		"bin",
 		"dist",
 		"plugin.json",
 		".claude-plugin",
@@ -47,6 +53,11 @@
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit",
 		"verify": "pnpm typecheck && pnpm lint && pnpm test"
+	},
+	"dependencies": {
+		"@toon-format/toon": "^4.1.1",
+		"clibuilder": "^11.3.0",
+		"yaml": "^2.9.0"
 	},
 	"devDependencies": {
 		"@types/node": "^24.10.1",

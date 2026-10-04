@@ -28,9 +28,11 @@ When loading any skill, also check `.agents/skills/<name>/SKILL.md` for project-
 
 ## Project overview
 
-`agent-harness` is a zero-runtime-dependency TypeScript library for detecting which AI agent
-harness is running (Claude Code, Cursor, Codex, GitHub Copilot CLI) and querying what it holds: its
-managed-policy locations, plugin storage, enabled plugins, and how it names plugin skills. It exists
+`agent-harness` is a TypeScript toolkit for working with AI agent harnesses. It detects which
+harness is running (Claude Code, Cursor, Codex, GitHub Copilot CLI, and more), queries what it
+holds (its managed-policy locations, plugin storage, enabled plugins, and how it names plugin
+skills), and resolves named reference documents layered across the managed, project, user, and
+plugin tiers. It depends on no other agent-layer package; ordinary npm libraries are fine. It exists
 so `universal-plugin`, `buddy-agent-harness`, `repobuddy`, and `cyberlegion/cyber-mux` share one
 implementation instead of each re-detecting harnesses on their own.
 
