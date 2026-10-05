@@ -189,7 +189,7 @@ project config override it, so it sets defaults, not policy.
 | Codex | `/skills` opens a picker | `$<skill>` | No; skills are bare names (Medium) | E-CODEX-S1–S3 |
 | Copilot CLI | `/<skill>` | — | No; first skill found with the name wins | E-COPILOT-S2, E-COPILOT-S5, E-COPILOT-S6 |
 | OpenCode | None; the model calls a `skill` tool | — | No | E-OC-S1, E-OC-S2 |
-| Kilo Code | None documented; ask in prose ("use the api-design skill") | — | No | E-KILO-S1, E-KILO-S2 |
+| Kilo Code | `/<skill>`; `/<skill>:skill` when a command or MCP prompt has the name | Ask in prose ("use the api-design skill") | No | E-KILO-S1, E-KILO-S3 |
 | Gemini CLI | None; the model calls `activate_skill`, and `/skills` only manages skills | — | Extension commands take an `<extension>:` prefix on collision | E-GEM-S1–S3 |
 | Qwen Code | None; the model calls a `skill` tool | — | No | E-QWEN-S1 |
 | Copilot in VS Code | `/<skill>`; a plugin's skill is `/<plugin>:<skill>` | — | Yes, for plugin skills | E-VSC-S1 |
@@ -320,9 +320,9 @@ The 2026-09-28 Auggie CLI and Kilo Code disagreements were settled on 2026-10-04
 E-KILO-L2). Kilo's page also names `.github/skills` and `.well-known/skills`, but only as examples
 of the `skills.paths` and `skills.urls` settings, so neither is a default directory.
 
-A lead, not yet evidence: Kilo's skills page now says every loaded skill is also a slash command
-(`/name`, or `/name:skill` when a command has the name), which contradicts E-KILO-S2 and
-`skillInvocation('kilo')`. Not yet researched.
+Kilo's skills page now says every loaded skill is also a slash command (`/name`, or `/name:skill`
+when a command has the name). Settled on 2026-10-04: the CLI and the VS Code extension both do this
+in source (E-KILO-S3, superseding E-KILO-S2), and `skillInvocation('kilo')` returns `/<skill>`.
 
 A lead, not yet evidence: while finding the R8 pages, the Qwen Code, Crush, and OpenHands docs were
 seen to name skills directories, where `skillsDirectories()` returns `undefined`. Their skills pages
