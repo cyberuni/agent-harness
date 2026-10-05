@@ -150,3 +150,10 @@ each finding against the vendor:
 Seen on the way, not yet researched: Kilo's skills page now says every skill is a slash command,
 against E-KILO-S2.
 
+## 2026-10-04 — Kilo skills are slash commands
+
+For [#56](https://github.com/cyberuni/agent-harness/issues/56). Checked the lead from #43 against
+Kilo's skills page and the source at main (76bcfd4). Both products register every loaded skill as a
+slash command under its bare name; on a clash with a custom command or MCP prompt the skill becomes
+`/<skill>:skill` (E-KILO-S3). That supersedes E-KILO-S2. Prose invocation still works.
+`skillInvocation('kilo')` now returns `/<skill>`, not namespaced.

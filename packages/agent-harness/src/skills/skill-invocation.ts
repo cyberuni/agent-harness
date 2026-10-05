@@ -22,9 +22,12 @@ export interface SkillInvocation {
  * Claude Code and Copilot in VS Code namespace by plugin; elsewhere two plugins' skills with the
  * same name collide (Copilot CLI keeps the first one it finds).
  *
- * Returns `undefined` for OpenCode, Kilo Code, Gemini CLI, Qwen Code, and Crush, which document no
- * typed form: the model loads a skill through a tool call when its description matches the task
- * (E-OC-S2, E-KILO-S2, E-GEM-S2, E-QWEN-S1, E-CRUSH-S1). Crush can also list a skill in its command
+ * Kilo Code returns `/<skill>` in both the CLI and the VS Code extension; when a custom command or
+ * MCP prompt has the same name, the skill is typed `/<skill>:skill` instead (E-KILO-S3).
+ *
+ * Returns `undefined` for OpenCode, Gemini CLI, Qwen Code, and Crush, which document no typed form:
+ * the model loads a skill through a tool call when its description matches the task (E-OC-S2,
+ * E-GEM-S2, E-QWEN-S1, E-CRUSH-S1). Crush can also list a skill in its command
  * palette, which is picked, not typed (E-CRUSH-S2). OpenHands triggers skills from the model too;
  * only a plugin's commands take a `/<plugin>:<command>` form (E-OH-S2, E-OH-S3).
  *
@@ -45,8 +48,9 @@ export function skillInvocation(harness: HarnessId, { plugin, skill }: PluginSki
 			return { text: `/${plugin}:${skill}`, namespaced: true, research: 'E-VSC-S1' }
 		case 'cline':
 			return { text: `/${skill}`, namespaced: false, research: 'E-CLINE-S2' }
-		case 'opencode':
 		case 'kilo':
+			return { text: `/${skill}`, namespaced: false, research: 'E-KILO-S3' }
+		case 'opencode':
 		case 'gemini-cli':
 		case 'qwen-code':
 		case 'crush':

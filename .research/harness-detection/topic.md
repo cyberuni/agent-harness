@@ -154,7 +154,9 @@ Both keep plugins as JS/TS modules in a config folder or as npm packages named i
 manifest and no enabled record (E-OC-P2, E-OC-P3, E-KILO-P2, E-KILO-P3). Both have a managed config
 directory per OS and a macOS managed-preferences domain; Kilo renamed the directory but not the
 domain (E-OC-M1, E-KILO-M1, E-KILO-M2). Both load `SKILL.md` skills, but the model loads them
-through a tool, and neither documents a slash form (E-OC-S2, E-KILO-S2).
+through a tool. OpenCode documents no slash form (E-OC-S2). Kilo does: every loaded skill is also
+a `/<skill>` command in the CLI and the VS Code extension, and becomes `/<skill>:skill` when a
+command or MCP prompt has the name (E-KILO-S3, superseding E-KILO-S2).
 
 ### Gemini CLI and Qwen Code
 
