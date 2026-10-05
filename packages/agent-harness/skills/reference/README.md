@@ -1,6 +1,6 @@
 # Reference
 
-Loads, creates, updates, deletes, and finds [references](https://cyberuni.github.io/agent-harness/concepts/reference-documents/): Markdown documents an agent reads on demand by name. It routes each request to the `reference` command, run from a launcher bundled in `scripts/`, and writes or deletes a reference only after the user approves it. Type `/reference` (`/agent-harness:reference` in Claude Code) to run it yourself.
+Loads, creates, updates, deletes, and finds [references](https://cyberuni.github.io/agent-harness/concepts/reference-documents/): Markdown documents an agent reads on demand by name. It routes each request to the `reference` command, run from a launcher bundled in `scripts/`, and writes or deletes a reference only after the user approves it. Type `/reference` (`/cyber-agent-harness:reference` in Claude Code) to run it yourself.
 
 | Mode | When |
 | --- | --- |
@@ -12,11 +12,11 @@ Loads, creates, updates, deletes, and finds [references](https://cyberuni.github
 | Inspect | `show`; `show --trace` for why a name resolved to one copy; `where` for the project and user files an override can be written to |
 | Wire a skill | giving a skill the line below |
 
-It ships in the `agent-harness` plugin:
+It ships in the `cyber-agent-harness` plugin:
 
 ```text
 /plugin marketplace add cyberuni/cyberplace
-/plugin install agent-harness@cyberplace
+/plugin install cyber-agent-harness@cyberplace
 ```
 
 ## Loading a reference from a skill
@@ -24,17 +24,17 @@ It ships in the `agent-harness` plugin:
 A calling skill names the references it needs in one line:
 
 ```text
-Load `skill-design` and `agent-tool-output` with the `reference` skill in the `agent-harness` plugin.
+Load `skill-design` and `agent-tool-output` with the `reference` skill in the `cyber-agent-harness` plugin.
 ```
 
 Name the plugin as well as the skill: an agent that does not have the skill can then tell the user what to install. Write the skill's name in words, as above. Every harness reads the words, but each types the skill differently, and where the typed form does not name the plugin, two plugins' skills of the same name collide.
 
-A skill written for one harness only may add that harness's typed form after the skill's name, for example "with the `reference` skill (`/agent-harness:reference`) in the `agent-harness` plugin" in Claude Code. Each harness names it this way:
+A skill written for one harness only may add that harness's typed form after the skill's name, for example "with the `reference` skill (`/cyber-agent-harness:reference`) in the `cyber-agent-harness` plugin" in Claude Code. Each harness names it this way:
 
 <!-- generated: harness invocations -->
 | Harness | Typed form | Names the plugin |
 | --- | --- | --- |
-| `claude-code` | `/agent-harness:reference` | yes |
+| `claude-code` | `/cyber-agent-harness:reference` | yes |
 | `cursor` | `/reference` | no |
 | `codex` | `$reference` | no |
 | `copilot-cli` | `/reference` | no |
@@ -42,7 +42,7 @@ A skill written for one harness only may add that harness's typed form after the
 | `kilo` | `/reference` | no |
 | `gemini-cli` | no typed form recorded | — |
 | `qwen-code` | no typed form recorded | — |
-| `vscode-copilot` | `/agent-harness:reference` | yes |
+| `vscode-copilot` | `/cyber-agent-harness:reference` | yes |
 | `cline` | `/reference` | no |
 | `crush` | no typed form recorded | — |
 | `openhands` | no typed form recorded | — |

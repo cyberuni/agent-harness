@@ -4,16 +4,21 @@ import { fileURLToPath } from 'node:url'
 import { cli, exitCodes } from 'clibuilder'
 import { createReferenceCommand } from './references/reference.command.js'
 
-/** Who runs the CLI: the package's name and version, and the folder its own `references/` sit in. */
+/** Who runs the CLI: the plugin's name, the package's version, and the folder its own `references/` sit in. */
 export type CliHost = { name: string; version: string; root: string }
 
+function readJson<T>(url: URL): T {
+	return JSON.parse(readFileSync(url, 'utf8')) as T
+}
+
 /**
- * Read from `../package.json`, which resolves from `src/cli.ts` and `dist/cli.js` alike. The skill
- * script, shipped with no package tree beside it, passes its own host instead.
+ * Read from `../plugin.json` and `../package.json`, which resolve from `src/cli.ts` and `dist/cli.js`
+ * alike. The skill script, shipped with no package tree beside it, passes its own host instead.
  */
 function packageHost(): CliHost {
 	const manifest = new URL('../package.json', import.meta.url)
-	const { name, version } = JSON.parse(readFileSync(manifest, 'utf8')) as { name: string; version: string }
+	const { name } = readJson<{ name: string }>(new URL('../plugin.json', import.meta.url))
+	const { version } = readJson<{ version: string }>(manifest)
 	return { name, version, root: dirname(fileURLToPath(manifest)) }
 }
 

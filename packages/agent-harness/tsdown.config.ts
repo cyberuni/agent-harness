@@ -1,11 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'tsdown'
 
-/** Read once here so the skill script gets them as literals: it ships with no `package.json` beside it. */
-const { name, version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
-	name: string
-	version: string
-}
+/** Read once here so the skill script gets them as literals: it ships with no manifest beside it. */
+const readJson = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'))
+const { name } = readJson('./plugin.json') as { name: string }
+const { version } = readJson('./package.json') as { version: string }
 
 // Dependencies stay external: `createReferenceCommand` must compose into the host CLI's own
 // `clibuilder` instance, not a private inlined copy that breaks command-registry identity.
@@ -50,7 +49,7 @@ export default defineConfig([
 		// `keepNames`: clibuilder tells a zod array argument from a scalar by its constructor's name,
 		// which minifying renames.
 		outputOptions: { codeSplitting: false, keepNames: true },
-		define: { __PACKAGE_NAME__: JSON.stringify(name), __PACKAGE_VERSION__: JSON.stringify(version) },
+		define: { __PLUGIN_NAME__: JSON.stringify(name), __PACKAGE_VERSION__: JSON.stringify(version) },
 		// jsonc-parser (through clibuilder) defaults to a UMD build whose `require()` calls rolldown
 		// can't follow; its ESM build is unlisted in `exports` but resolves as a direct subpath.
 		alias: { 'jsonc-parser': 'jsonc-parser/lib/esm/main.js' },

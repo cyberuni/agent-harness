@@ -42,8 +42,8 @@ plugin's.
 
 ## The reference skill
 
-The package is also an agent plugin, `agent-harness`, that ships a `reference` skill. Type
-`/reference` (`/agent-harness:reference` in Claude Code) to run it.
+The package is also an agent plugin, `cyber-agent-harness`, that ships a `reference` skill. Type
+`/reference` (`/cyber-agent-harness:reference` in Claude Code) to run it.
 
 | Mode | When |
 | --- | --- |
@@ -62,7 +62,7 @@ skill's bundled `scripts/reference.mjs`, never a package runner.
 A skill loads a reference by naming it in one line:
 
 ```text
-Load `agent-readiness-weights` with the `reference` skill in the `agent-harness` plugin.
+Load `agent-readiness-weights` with the `reference` skill in the `cyber-agent-harness` plugin.
 ```
 
 ## Where a reference is read from

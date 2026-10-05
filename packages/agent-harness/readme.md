@@ -300,15 +300,15 @@ app.command(createReferenceCommand({ plugin: { name: 'my-plugin', root: pluginRo
 
 ### The `reference` skill
 
-The package is also an agent plugin, `agent-harness`, that ships a `reference` skill. Type
-`/reference` (`/agent-harness:reference` in Claude Code) to load, create, update, delete, find, or
+The package is also an agent plugin, `cyber-agent-harness`, that ships a `reference` skill. Type
+`/reference` (`/cyber-agent-harness:reference` in Claude Code) to load, create, update, delete, find, or
 inspect a reference, or to wire a skill to load one. The skill writes or deletes a file only after
 you approve it. It runs the command from its bundled `scripts/reference.mjs`, which needs no
 `node_modules`.
 
 ```text
 /plugin marketplace add cyberuni/cyberplace
-/plugin install agent-harness@cyberplace
+/plugin install cyber-agent-harness@cyberplace
 ```
 
 A skill that needs a reference names it in one line, as the skill's
@@ -316,7 +316,7 @@ A skill that needs a reference names it in one line, as the skill's
 shows:
 
 ```text
-Load `skill-design` with the `reference` skill in the `agent-harness` plugin.
+Load `skill-design` with the `reference` skill in the `cyber-agent-harness` plugin.
 ```
 
 ## Why this exists
