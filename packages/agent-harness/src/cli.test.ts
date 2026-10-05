@@ -58,6 +58,12 @@ describe('run', () => {
 		expect(stdout).toHaveBeenCalledWith('## Host\n')
 	})
 
+	it('names its own plugin layer after the plugin, not the npm package', async () => {
+		expect(await run(['node', 'agent-harness', 'reference', 'list', '--format', 'json', '--root', tempRoot()])).toBe(0)
+		const { layers } = JSON.parse(String(stdout.mock.calls[0]?.[0])) as { layers: { plugin: string }[] }
+		expect(layers.map(({ plugin }) => plugin)).toContain('cyber-agent-harness')
+	})
+
 	it('returns the exit code a failing subcommand gives', async () => {
 		expect(await run(['node', 'agent-harness', 'reference', 'show', 'absent', '--root', tempRoot()])).toBe(1)
 	})
