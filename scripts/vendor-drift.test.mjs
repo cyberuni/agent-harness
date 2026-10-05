@@ -161,6 +161,20 @@ describe('compareVendor', () => {
 		)
 	})
 
+	it('counts a source-backed directory as named', () => {
+		const sourceBacked = { evidence: 'E-CC-L9', paths: ['~/.claude/skills'] }
+		const baseline = { sources: [source({ paths: ['.claude/skills'], sourceBacked })] }
+		const readings = { 0: { paths: ['.claude/skills'] } }
+		assert.deepEqual(compareVendor({ baseline, readings, directories }), [])
+	})
+
+	it('rejects a malformed sourceBacked entry', () => {
+		assert.throws(
+			() => assertVendorBaseline({ sources: [source({ sourceBacked: { evidence: 'E-CC-L9', paths: [] } })] }),
+			/malformed `sourceBacked`/,
+		)
+	})
+
 	it('reports a changed hash-mode section', () => {
 		const baseline = { sources: [source({ axis: 'instructions', mode: 'hash', hash: 'old' })] }
 		const findings = compareVendor({ baseline, readings: { 0: { hash: 'new' } } })
@@ -217,5 +231,16 @@ describe('vendor-baseline.json', () => {
 		const directories = await loadSkillsDirectories(await loadHarnessIds())
 		for (const s of baseline.sources.filter((s) => s.axis === 'skills' && directories[s.harness]))
 			assert.ok(directories[s.harness].research.includes(s.evidence), `${s.harness}: ${s.evidence}`)
+	})
+
+	it('backs each source-backed directory with evidence skillsDirectories() cites', async () => {
+		const directories = await loadSkillsDirectories(await loadHarnessIds())
+		for (const s of baseline.sources.filter((s) => s.sourceBacked)) {
+			assert.ok(rows.has(s.sourceBacked.evidence), `${s.harness}: ${s.sourceBacked.evidence} is not in evidence.md`)
+			assert.ok(
+				directories[s.harness]?.research.includes(s.sourceBacked.evidence),
+				`${s.harness}: ${s.sourceBacked.evidence}`,
+			)
+		}
 	})
 })

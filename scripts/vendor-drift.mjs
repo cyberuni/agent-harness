@@ -115,6 +115,11 @@ export function assertVendorBaseline(baseline) {
 		if (!AXES.includes(source.axis)) throw new ExtractionError(`vendor source ${label} has unknown axis`)
 		if (source.mode === 'hash' ? typeof source.hash !== 'string' : !Array.isArray(source.paths))
 			throw new ExtractionError(`vendor source ${label} has no recorded ${source.mode === 'hash' ? 'hash' : 'paths'}`)
+		if (source.sourceBacked !== undefined) {
+			const { evidence, paths } = source.sourceBacked
+			if (typeof evidence !== 'string' || evidence === '' || !Array.isArray(paths) || paths.length === 0)
+				throw new ExtractionError(`vendor source ${label} has a malformed \`sourceBacked\``)
+		}
 	}
 	return baseline
 }
@@ -122,6 +127,9 @@ export function assertVendorBaseline(baseline) {
 /**
  * Compares what each source reads now with what was reviewed, and checks each recorded skills
  * directory is still named by a skills source for its harness.
+ *
+ * A source's `sourceBacked` lists directories the vendor's own code reads but its docs do not name,
+ * with the evidence ID that shows it. They count as named, so recording them is not a finding.
  *
  * `readings` maps a source's index in `baseline.sources` to the result of `readSource`.
  */
@@ -159,7 +167,9 @@ export function compareVendor({ baseline, readings, directories = {} }) {
 			.map((source, index) => ({ source, index }))
 			.filter(({ source }) => source.harness === harness && source.axis === 'skills' && source.mode !== 'hash')
 		if (indexes.length === 0) continue
-		const named = new Set(indexes.flatMap(({ index }) => readings[index].paths))
+		const named = new Set(
+			indexes.flatMap(({ source, index }) => [...readings[index].paths, ...(source.sourceBacked?.paths ?? [])]),
+		)
 		const missing = [
 			...recorded.project.filter((dir) => !named.has(dir)),
 			...recorded.user.filter((dir) => !named.has(`~/${dir}`)).map((dir) => `~/${dir}`),

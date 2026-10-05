@@ -1,6 +1,6 @@
 {
 	"source": "https://raw.githubusercontent.com/vercel-labs/skills/main/src/agents.ts",
-	"reviewed": "2026-09-27",
+	"reviewed": "2026-10-04",
 	"agents": {
 		"aider-desk": {
 			"skillsDir": ".aider-desk/skills",
@@ -215,8 +215,8 @@
 			"globalSkillsDir": "{home}/.ona/skills"
 		},
 		"pi": {
-			"skillsDir": ".pi/skills",
-			"globalSkillsDir": "{home}/.pi/agent/skills"
+			"skillsDir": ".agents/skills",
+			"globalSkillsDir": "{home}/.agents/skills"
 		},
 		"posit-assistant": {
 			"skillsDir": ".posit/assistant/skills",

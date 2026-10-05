@@ -1,5 +1,5 @@
 {
-	"reviewed": "2026-09-28",
+	"reviewed": "2026-10-04",
 	"sources": [
 		{
 			"harness": "claude-code",
@@ -167,12 +167,21 @@
 		{
 			"harness": "kilo",
 			"axis": "skills",
-			"evidence": "E-KILO-L1",
-			"confidence": "Low — vendor doc disputed by vendor tracker; recorded by repobuddy/buddy-agent-harness E-KILO-01",
+			"evidence": "E-KILO-L2",
+			"confidence": "High — vendor doc and source agree",
 			"cited": "https://kilo.ai/docs/customize/skills",
 			"url": "https://raw.githubusercontent.com/Kilo-Org/kilocode/main/packages/kilo-docs/pages/customize/skills.md",
 			"section": "Skill Locations",
-			"paths": [".agents/skills"]
+			"paths": [
+				".agents/skills",
+				".claude/skills",
+				".github/skills",
+				".kilo/skills",
+				".well-known/skills",
+				"~/.agents/skills",
+				"~/.claude/skills",
+				"~/.kilo/skills"
+			]
 		},
 		{
 			"harness": "kilo",
@@ -222,7 +231,11 @@
 			"cited": "https://docs.cline.bot/customization/skills",
 			"url": "https://docs.cline.bot/customization/skills.md",
 			"section": "Where Skills Live",
-			"paths": [".claude/skills", ".cline/skills", ".clinerules/skills", "~/.cline/skills"]
+			"paths": [".claude/skills", ".cline/skills", ".clinerules/skills", "~/.cline/skills"],
+			"sourceBacked": {
+				"evidence": "E-CLINE-S3",
+				"paths": [".agents/skills", "~/.agents/skills"]
+			}
 		},
 		{
 			"harness": "cline",
@@ -257,12 +270,19 @@
 		{
 			"harness": "augment",
 			"axis": "skills",
-			"evidence": "E-AUG-S1",
-			"confidence": "High — source + docs agree",
+			"evidence": "E-AUG-S4",
+			"confidence": "High — vendor doc",
 			"cited": "https://docs.augmentcode.com/cli/skills.md",
 			"url": "https://docs.augmentcode.com/cli/skills.md",
 			"section": "Skill Locations",
-			"paths": [".augment/skills", "~/.augment/skills"]
+			"paths": [
+				".agents/skills",
+				".augment/skills",
+				".claude/skills",
+				"~/.agents/skills",
+				"~/.augment/skills",
+				"~/.claude/skills"
+			]
 		},
 		{
 			"harness": "augment",

@@ -82,4 +82,4 @@ The same research backs the harness queries:
   also returns `undefined` for the Auggie CLI, where the typed form of a plugin skill is not
   confirmed.
 - `skillsDirectories()` returns the project and user directories a harness reads skills from, or
-  `undefined` where they are not confirmed: Kilo Code, Qwen Code, Crush, and OpenHands.
+  `undefined` where they are not confirmed: Qwen Code, Crush, and OpenHands.

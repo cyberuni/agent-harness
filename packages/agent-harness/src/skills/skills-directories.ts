@@ -13,10 +13,9 @@ export interface SkillsDirectories {
  * The directories a harness reads skills from, as its vendor documents them.
  *
  * Lists project and user directories read by default. Admin, bundled, and plugin skills are left
- * out.
+ * out. Cline's `.agents/skills` rests on its source, which its docs do not yet name (E-CLINE-S3).
  *
- * Returns `undefined` where the directories are not confirmed: Kilo Code, whose tracker disputes
- * that its documented `.agents/skills` loads (E-KILO-L1); Qwen Code, whose source names the
+ * Returns `undefined` where the directories are not confirmed: Qwen Code, whose source names the
  * `.agents` root but not the directory under it (E-QWEN-S1); and Crush and OpenHands, where no
  * directory is recorded.
  */
@@ -58,13 +57,22 @@ export function skillsDirectories(harness: HarnessId): SkillsDirectories | undef
 			}
 		case 'cline':
 			return {
-				project: ['.cline/skills', '.clinerules/skills', '.claude/skills'],
-				user: ['.cline/skills'],
-				research: ['E-CLINE-S1'],
+				project: ['.cline/skills', '.clinerules/skills', '.claude/skills', '.agents/skills'],
+				user: ['.cline/skills', '.agents/skills'],
+				research: ['E-CLINE-S1', 'E-CLINE-S3'],
 			}
 		case 'augment':
-			return { project: ['.augment/skills'], user: ['.augment/skills'], research: ['E-AUG-S1'] }
+			return {
+				project: ['.augment/skills', '.claude/skills', '.agents/skills'],
+				user: ['.augment/skills', '.claude/skills', '.agents/skills'],
+				research: ['E-AUG-S4'],
+			}
 		case 'kilo':
+			return {
+				project: ['.kilo/skills', '.agents/skills', '.claude/skills'],
+				user: ['.kilo/skills', '.agents/skills', '.claude/skills'],
+				research: ['E-KILO-L2'],
+			}
 		case 'qwen-code':
 		case 'crush':
 		case 'openhands':

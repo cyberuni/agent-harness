@@ -128,3 +128,25 @@ Confirmed by direct experiment that Claude Code rejects `--output-format stream-
 `--verbose` (E-CC-H4), and read Codex's session path from source at 4ad985e (E-CODEX-H4). OpenCode,
 Kilo Code, Cline, Crush, OpenHands, and the Auggie CLI have one-shot modes but stay `unknown` until
 their pages are read directly.
+
+## 2026-10-04 — skills drift from #43
+
+For [#43](https://github.com/cyberuni/agent-harness/issues/43), the drift check's report. Checked
+each finding against the vendor:
+
+- Auggie CLI. Its skills page now lists `.augment/skills`, `.claude/skills`, and `.agents/skills`,
+  project and user, in that precedence (E-AUG-S4). `skillsDirectories('augment')` now returns all
+  three.
+- Kilo Code. The page and the source at main agree on `.kilo/skills`, `.agents/skills`, and
+  `.claude/skills` at both scopes, and the tracker bug about global `.agents` skills was fixed
+  (E-KILO-L2, superseding the contested E-KILO-L1). `skillsDirectories('kilo')` no longer returns
+  `undefined`. `.github/skills` and `.well-known/skills` on the page are config examples, not
+  defaults.
+- Cline. The registry's `.agents/skills` is right: both Cline clients read it at both scopes,
+  though the docs still do not name it (E-CLINE-S3). `skillsDirectories('cline')` now includes it,
+  and the drift baseline gained `sourceBacked` so a source-only directory is not reported as
+  undocumented.
+
+Seen on the way, not yet researched: Kilo's skills page now says every skill is a slash command,
+against E-KILO-S2.
+
