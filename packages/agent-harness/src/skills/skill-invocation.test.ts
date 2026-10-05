@@ -38,7 +38,15 @@ describe('skillInvocation', () => {
 		})
 	})
 
-	it.each(['opencode', 'kilo', 'gemini-cli', 'qwen-code', 'crush', 'openhands', 'augment'] as const)(
+	it('uses the bare skill name as a slash command in Kilo Code', () => {
+		expect(skillInvocation('kilo', { plugin: 'p', skill: 'review' })).toEqual({
+			text: '/review',
+			namespaced: false,
+			research: 'E-KILO-S3',
+		})
+	})
+
+	it.each(['opencode', 'gemini-cli', 'qwen-code', 'crush', 'openhands', 'augment'] as const)(
 		'returns undefined for %s, where no typed form of a plugin skill is confirmed',
 		(harness) => {
 			expect(skillInvocation(harness, { plugin: 'p', skill: 'review' })).toBeUndefined()
