@@ -3,6 +3,7 @@
 | Topic | Question |
 | --- | --- |
 | [harness-detection](./harness-detection/conclusion.md) | How to identify which AI agent harness (Claude Code, Cursor, Codex, GitHub Copilot CLI) a process runs under, and where each keeps its managed policy, plugin storage, enabled plugins, and skill naming |
+| [worktree-management](./worktree-management/conclusion.md) | What our tools and coding agents need from a worktree library, how existing tools and harnesses manage worktrees, and how to reuse an idle worktree safely |
 
 Each topic under `.research/<topic-slug>/` holds four files: `conclusion.md` (the current best
 answer), `topic.md` (the full investigation), `evidence.md` (claims with source URLs and
