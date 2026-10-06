@@ -63,3 +63,8 @@ worktree.
 
 Added Auggie's session signature (E-PROC-AUG1). Its tool-process markers remain unobserved: the
 account was out of usage.
+
+## 2026-10-05 — Antigravity CLI
+
+Added the Antigravity CLI (`agy` 1.2.17) session signature and its `ANTIGRAVITY_CONVERSATION_ID`
+link (E-PROC-AGY1).
