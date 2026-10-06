@@ -112,7 +112,7 @@ describe('pruneWorktrees', () => {
 				{
 					root: wt,
 					branch: 'feat-1',
-					owner: 'unknown',
+					owner: 'self',
 					status: 'candidate',
 					occupants: [],
 					lingering: [],

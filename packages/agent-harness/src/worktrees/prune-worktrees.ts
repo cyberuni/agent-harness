@@ -1,4 +1,4 @@
-import { basename, dirname, sep } from 'node:path'
+import { sep } from 'node:path'
 
 import { readDirty } from './dirty.js'
 import { type Exec, nodeExec } from './exec.js'
@@ -12,7 +12,7 @@ import type { ProcessSource } from './process-source.js'
  * Why a worktree was left in place, in the fail-closed order the checks run (E-MUX-5, E-TH-2):
  *
  * - `primary`: the primary checkout. Never removed, with no override.
- * - `foreign`: owned by another tool or person (`classifyOwner`), or outside this library's layout.
+ * - `foreign`: owned by another tool or person (`classifyOwner`), including a worktree off this library's slot paths.
  * - `leased`: held by this library's lease. git itself refuses to remove it (E-GIT-L3); `release`
  *   it first.
  * - `prunable`: its checkout is already gone; `git worktree prune` collects the entry.
@@ -97,7 +97,7 @@ export interface PruneWorktreesOptions {
  * can reclaim them (E-TH-5 is the counterexample).
  *
  * An unleased worktree carries no record of its owner, since the lease is the only one this library
- * writes; it is recognised as this library's by its layout, `<parent>/<repo>.worktrees/<repo>-<n>`.
+ * writes; `classifyOwner` recognises it as this library's by its slot path (`slotPath`).
  */
 export async function pruneWorktrees(options: PruneWorktreesOptions): Promise<PruneReport> {
 	const exec = options.exec ?? nodeExec
@@ -129,7 +129,7 @@ export async function pruneWorktrees(options: PruneWorktreesOptions): Promise<Pr
 		}
 		if (entry.branch) outcome.branch = entry.branch
 		if (!occupancy.verified && !strict) outcome.unverified = true
-		const reason = skipReason(entry, owner, primary, occupancy)
+		const reason = skipReason(entry, owner, occupancy)
 		if (reason) outcome.reason = reason
 		else outcome.status = apply ? await remove(exec, primary, entry, options.ignore) : 'candidate'
 		worktrees.push(outcome)
@@ -143,13 +143,12 @@ export async function pruneWorktrees(options: PruneWorktreesOptions): Promise<Pr
 function skipReason(
 	entry: WorktreeEntry,
 	owner: WorktreeOwnerKind,
-	primary: string,
 	occupancy: { busy: boolean; verified: boolean },
 ): PruneSkipReason | undefined {
 	if (!entry.linked) return 'primary'
 	if (parseLeaseReason(entry.locked)) return 'leased'
-	// Any other lock is someone else's hold, whatever the path says.
-	if (entry.locked !== undefined || owner !== 'unknown' || !inLibraryLayout(entry.root, primary)) return 'foreign'
+	// `self` without our lease is an unlocked slot; any other lock is someone else's hold.
+	if (owner !== 'self') return 'foreign'
 	if (entry.prunable) return 'prunable'
 	if (occupancy.busy) return occupancy.verified ? 'busy' : 'unverified'
 	if (entry.dirty === undefined) return 'dirty-unknown'
@@ -157,14 +156,6 @@ function skipReason(
 	if (entry.merged === undefined) return 'merge-unknown'
 	if (!entry.merged) return 'unmerged'
 	return undefined
-}
-
-/** Whether `root` is `<parent>/<repo>.worktrees/<repo>-<n>` for the primary at `<parent>/<repo>`. */
-function inLibraryLayout(root: string, primary: string): boolean {
-	const repo = basename(primary)
-	if (dirname(root) !== `${dirname(primary)}${sep}${repo}.worktrees`) return false
-	const name = basename(root)
-	return name.startsWith(`${repo}-`) && /^[1-9]\d*$/.test(name.slice(repo.length + 1))
 }
 
 async function remove(

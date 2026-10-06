@@ -73,3 +73,11 @@ link (E-PROC-AGY1).
 
 Added E-CC-W6: where Claude Code reads `.worktreeinclude`, the ignored-only rule, and how a `**/`
 pattern reaches into a wholly ignored directory. Backs `seedWorktree`.
+
+## 2026-10-05 — idle slots are ours
+
+Release deletes the lease lock, so a released worktree carries no lock. To keep it reusable, an
+unlocked worktree at a library-assigned slot (`<repo>.worktrees/<repo>-<n>`) now counts as ours
+(`self`). A slot locked by anyone else stays foreign. A user's own `repo-<n>` folder in that
+directory would be taken as ours; reuse still requires it to be clean and landed, so nothing unsaved
+is lost.

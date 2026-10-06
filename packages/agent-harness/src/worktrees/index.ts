@@ -1,11 +1,25 @@
+export type {
+	AcquireErrorCode,
+	AcquireOptions,
+	AcquireResult,
+	CreateWorktreeRequest,
+	ExplainOptions,
+	SkipReason,
+	WorktreeCreator,
+	WorktreeVerdict,
+} from './acquire.js'
+export { AcquireError, acquire, explain, gitWorktreeCreator } from './acquire.js'
 export type { DirtyOptions } from './dirty.js'
 export { readDirty } from './dirty.js'
 export type { Exec } from './exec.js'
 export { nodeExec } from './exec.js'
 export type { ForgeMergedProbe, LandedSignal } from './landed.js'
 export { ghForgeMergedProbe } from './landed.js'
+export type { Lease, LeaseFs, LeaseStoreOptions, ReleaseResult } from './lease.js'
+export { claimLease, holdsLease, leaseFile, nodeLeaseFs, release } from './lease.js'
 export type { ListWorktreesOptions, PrimaryRootOptions, WorktreeEntry } from './list-worktrees.js'
 export { listWorktrees, normalizeWorktreePath, primaryRoot } from './list-worktrees.js'
+export { slotNumber, slotPath, worktreesDir } from './naming.js'
 export type {
 	LeftoverProcess,
 	LeftoverReason,
