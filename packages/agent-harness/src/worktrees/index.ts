@@ -20,4 +20,12 @@ export type { ClassifyOwnerOptions, LeaseReason, WorktreeOwner, WorktreeOwnerKin
 export { classifyOwner, LEASE_LIBRARY, parseLeaseReason } from './owner.js'
 export type { ProcessInfo, ProcessSource } from './process-source.js'
 export { procfsProcessSource } from './process-source.js'
+export type {
+	SeedFs,
+	SeedInventory,
+	SeedSkip,
+	SeedSkipReason,
+	SeedWorktreeOptions,
+} from './seed-worktree.js'
+export { nodeSeedFs, seedWorktree, WORKTREE_INCLUDE } from './seed-worktree.js'
 export type { SessionHarnessId } from './session-signatures.js'
