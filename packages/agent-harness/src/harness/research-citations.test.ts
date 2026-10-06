@@ -4,7 +4,10 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const srcDir = join(import.meta.dirname, '..')
-const evidencePath = join(import.meta.dirname, '../../../../.research/harness-detection/evidence.md')
+// Topics whose harness facts the source may cite; a later topic adds to harness-detection.
+const evidencePaths = ['harness-detection', 'worktree-management'].map((topic) =>
+	join(import.meta.dirname, '../../../../.research', topic, 'evidence.md'),
+)
 
 async function sourceFiles(dir: string): Promise<string[]> {
 	const entries = await readdir(dir, { withFileTypes: true, recursive: true })
@@ -14,8 +17,8 @@ async function sourceFiles(dir: string): Promise<string[]> {
 }
 
 describe('research citations', () => {
-	it('cites only evidence IDs that exist in .research/harness-detection/evidence.md', async () => {
-		const evidence = await readFile(evidencePath, 'utf8')
+	it('cites only evidence IDs that exist in a research topic', async () => {
+		const evidence = (await Promise.all(evidencePaths.map((path) => readFile(path, 'utf8')))).join('\n')
 		const known = new Set([...evidence.matchAll(/^\| (E-[A-Z]+-[A-Z]\d+) \|/gm)].map((m) => m[1]))
 
 		const cited = new Set<string>()
