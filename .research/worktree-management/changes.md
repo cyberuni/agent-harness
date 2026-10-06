@@ -30,3 +30,9 @@ harness state keyed by path.
 
 Worktree directories are `<repo>.worktrees/<repo>-<n>`, so a tool that shows only the folder name
 still names the repo.
+
+## 2026-10-05 — lease spike
+
+Ran the lease spike against git 2.56.0 and read `lock_worktree` in git's source. An exclusively
+created `locked` file works as a lease. `git worktree lock` can overwrite it in a narrow race, so
+the design reads the lease back after claiming and before destructive steps. Added E-GIT-L1 to L6.

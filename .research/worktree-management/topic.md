@@ -42,4 +42,5 @@ Three investigations ran in parallel on 2026-10-05:
 2. A treehouse-style state file with a file lock. More room for metadata, but a second source of
    truth and a repo-wide serialization point.
 
-A spike to confirm option 1 was not run in this session.
+A spike on 2026-10-05 against git 2.56.0 confirmed option 1, with one race against `git worktree lock`
+(E-GIT-L1 to E-GIT-L6).

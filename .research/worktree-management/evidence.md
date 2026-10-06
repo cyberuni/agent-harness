@@ -51,3 +51,14 @@ from a README or implied. **Low** means indirect.
 | E-CODEX-W1 | Codex app worktrees under `$CODEX_HOME/worktrees` (root configurable), detached HEAD by default, ~15 kept, snapshot before delete | https://learn.chatgpt.com/docs/environments/git-worktrees | 2026-10-05 | High — vendor doc |
 | E-COP-W1 | Copilot CLI v1.0.71-1 added local `/worktree`; layout undocumented. `/delegate` uses a remote branch, no local worktree | https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/delegate-tasks-to-cca, release notes | 2026-10-05 | Medium |
 | E-HERDR-W1 | herdr has `herdr worktree create/open/list`; path and branch scheme not documented | https://github.com/ogulcancelik/herdr; cyber-mux usage (E-MUX-7) | 2026-10-05 | Medium |
+
+## Lease spike (git 2.56.0, Linux/WSL, 2026-10-05)
+
+| ID | Claim | Source | Date | Confidence |
+|---|---|---|---|---|
+| E-GIT-L1 | Exclusive-creating `$GIT_COMMON_DIR/worktrees/<id>/locked` (Node `writeFileSync` flag `wx`) with a one-line JSON reason makes git treat the worktree as locked; a second `wx` create fails with `EEXIST` | direct experiment, git 2.56.0 | 2026-10-05 | High — direct observation |
+| E-GIT-L2 | `git worktree list --porcelain` prints the reason as `locked "<C-quoted reason>"`; JSON quotes are escaped and a newline appears as `\n`, so a one-line reason round-trips | direct experiment, git 2.56.0 | 2026-10-05 | High — direct observation |
+| E-GIT-L3 | On a worktree locked this way, `git worktree lock` fails (`already locked`, exit 128) and leaves the file intact; `git worktree remove` and `remove -f` refuse; `move` refuses; `prune` keeps the entry even when the directory is gone | direct experiment, git 2.56.0 | 2026-10-05 | High — direct observation |
+| E-GIT-L4 | `git worktree remove -f -f` removes a locked worktree, and `git worktree unlock` deletes the `locked` file whoever wrote it | direct experiment, git 2.56.0 | 2026-10-05 | High — direct observation |
+| E-GIT-L5 | `lock_worktree` checks `worktree_lock_reason(wt)` and then calls `write_file(path, "%s", reason)`, which creates with truncate, not exclusively. A `git worktree lock` whose check runs before our create can overwrite our lease | https://raw.githubusercontent.com/git/git/v2.56.0/builtin/worktree.c (`lock_worktree`) | 2026-10-05 | High — source |
+| E-GIT-L6 | `remove_worktree` reads the lock reason only when `force < 2` | same file (`remove_worktree`) | 2026-10-05 | High — source |

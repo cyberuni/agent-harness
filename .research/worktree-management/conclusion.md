@@ -51,12 +51,19 @@ E-HERDR-W1), so the library reports `unknown` for them.
   such as a cyberfleet Captain or Pod. It can have any number of *occupants*: the owner's
   subagents, a reviewer or judge session, a watcher that updates docs. The library never limits how
   many there are, what role they play, or who may write. Coordinating writers is the caller's job.
-- **Lease = git's worktree lock.** Claim a worktree by exclusive-creating
-  `$GIT_COMMON_DIR/worktrees/<id>/locked` with a reason naming the library, a lease ID, and the
-  holder. git then refuses to remove or prune it, and Claude Code's sweep never releases a lock it
-  did not set (E-CC-W4). Whether git tolerates a structured reason, and whether the exclusive create
-  holds against `git worktree lock`, is unverified: spike it before building on it. The lease is the
-  only record the library writes.
+- **Lease = git's worktree lock (verified, E-GIT-L1 to L6).** Claim a worktree by exclusive-creating
+  `$GIT_COMMON_DIR/worktrees/<id>/locked` with a one-line JSON reason naming the library, a lease
+  ID, and the holder. git then refuses to lock, remove, move, or prune it (E-GIT-L3), and Claude
+  Code's sweep never releases a lock it did not set (E-CC-W4). The lease is the only record the
+  library writes. Consequences for the design:
+  - Two library callers exclude each other through the exclusive create (E-GIT-L1).
+  - `git worktree lock` is check-then-truncate, not exclusive (E-GIT-L5). In the window between
+    its check and its write it can overwrite our lease. After claiming, read the file back and
+    confirm the lease ID; confirm it again before any destructive step.
+  - `git worktree unlock` or `remove -f -f` breaks a lease (E-GIT-L4). That is the user's manual
+    override, not a bug: `release` reports a lease it no longer holds as lost instead of failing,
+    and the library itself never passes `-f -f`.
+  - Write the reason on one line; git C-quotes it in porcelain output (E-GIT-L2).
 - **A live agent session makes a worktree busy; a dev service does not.** Occupants are discovered,
   not registered: an injectable process probe finds harness session processes whose working
   directory is inside the worktree. It must tell a harness's own session process from the tool
