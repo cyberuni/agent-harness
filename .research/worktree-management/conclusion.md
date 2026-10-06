@@ -86,9 +86,10 @@ E-HERDR-W1), so the library reports `unknown` for them.
     | Goose | exe `*/goose` with `run` or `session` (E-PROC-GOOSE1) | — | `AGENT_SESSION_ID` |
     | OpenHands | `python`, argv `*/openhands` (E-PROC-OH1) | `tmux -Lopenhands` server | none (`TMUX` only) |
     | Cline | native `*/cli-linux-x64/bin/cline` + `node` wrapper (E-PROC-CLINE1) | `--cline-hub-daemon` | none |
+    | Auggie | `node`, argv `*/@augmentcode/auggie/augment.mjs` (E-PROC-AUG1) | — | unobserved |
 
     A wrapper and its native or relaunched child are one session; either in the worktree makes it
-    busy. Auggie was not runnable and has no signature; an unknown harness is invisible to the probe.
+    busy. An unknown harness is invisible to the probe.
   - *Where it works: the session's own cwd.* Claude Code moves its process cwd into a worktree it
     enters (E-PROC-CC5), so the cwd check sees it. For Claude Code, `~/.claude/sessions/<pid>.json`
     records `cwd` and `procStart` for each live session (E-PROC-CC4); it is undocumented, so use it
@@ -134,7 +135,7 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - **A reused path inherits path-keyed harness state.** Claude Code, Cursor, Qwen Code, opencode,
   and Kilo key per-project state by working directory (E-PROC-CC6, E-PROC-CUR2, E-PROC-QWEN1,
   E-PROC-OC1, E-PROC-KILO1), so in a reused worktree a "continue" resumes the previous task. Codex,
-  Copilot, Goose, OpenHands, and Cline key by session id (E-PROC-CX3, E-PROC-COP3, E-PROC-GOOSE1,
+  Copilot, Goose, OpenHands, Cline, and Auggie key by session id (E-PROC-AUG1, E-PROC-CX3, E-PROC-COP3, E-PROC-GOOSE1,
   E-PROC-OH1, E-PROC-CLINE1). Crush keeps its state in `<cwd>/.crush/` inside the worktree
   (E-PROC-CRUSH1): unless the repo ignores it, it makes the worktree dirty, and a recycle's
   `clean -fd` deletes it. The library reports `reused` and the previous branch so callers can start
@@ -157,7 +158,7 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - herdr's worktree path and branch scheme; read its source.
 - Copilot CLI local `/worktree` layout.
 - macOS probe behaviour, observed rather than read from headers (E-PROC-OS2).
-- Gemini CLI tool-process markers (model unavailable during the run), Auggie (not logged in), and
+- Gemini CLI and Auggie tool-process markers (model unavailable or account out of usage), and
   OpenHands in Docker sandbox mode, where tool processes are not on the host at all.
 - Whether reading another process's environment (needed for the Cursor worker exclusion) works on
   macOS for same-user processes.

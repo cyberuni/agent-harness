@@ -58,3 +58,8 @@ child pairs count as one session; shared daemons (Cline's hub, OpenHands' tmux s
 sessions. Tool processes with neither a session ancestor nor a link variable are reported as
 unlinked rather than lingering. Extended the path-keyed state list; Crush stores state inside the
 worktree.
+
+## 2026-10-05 — Auggie
+
+Added Auggie's session signature (E-PROC-AUG1). Its tool-process markers remain unobserved: the
+account was out of usage.
