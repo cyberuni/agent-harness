@@ -43,3 +43,9 @@ Ran Claude Code, Codex, and Copilot CLI headless and read `/proc` (E-PROC-*). A 
 recognised by its executable, not its environment, because nested sessions inherit tool markers.
 Lingering services are linked by ancestry and session-id variables. Recorded path-keyed harness
 state and Claude Code's lock-reason format. Cursor's tool environment remains untested.
+
+## 2026-10-05 — Cursor session processes
+
+Re-ran the Cursor experiment logged in (E-PROC-CUR3, E-PROC-CUR4). Cursor's worker shares the
+session's exe and argv and outlives it, so the probe excludes it by its `AGENT_CLI_*` environment.
+`CURSOR_CONVERSATION_ID` links orphans to their session.

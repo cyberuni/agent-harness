@@ -72,14 +72,17 @@ E-HERDR-W1), so the library reports `unknown` for them.
     the executable instead: Claude Code `*/claude/versions/*` (E-PROC-CC1), Codex `*/codex`
     (E-PROC-CX1), Copilot `*/copilot` with a possible ` (deleted)` suffix after auto-update
     (E-PROC-COP1), Cursor a `node` whose argv names `cursor-agent` (E-PROC-CUR1). Helper children
-    (`codex-code-mode-host`) and stale daemon pid files are not sessions.
+    (`codex-code-mode-host`) and stale daemon pid files are not sessions. Cursor's worker shares the
+    session's exe and argv and can outlive it (E-PROC-CUR3); exclude a process carrying
+    `AGENT_CLI_SOCKET_PATH`, or an orphaned worker keeps a worktree busy forever. Report it as
+    lingering instead.
   - *Where it works: the session's own cwd.* Claude Code moves its process cwd into a worktree it
     enters (E-PROC-CC5), so the cwd check sees it. For Claude Code, `~/.claude/sessions/<pid>.json`
     records `cwd` and `procStart` for each live session (E-PROC-CC4); it is undocumented, so use it
     only as a cross-check.
   - *Linking a service to its session.* Each harness stamps a session id on its tool processes:
-    `CLAUDE_CODE_SESSION_ID` (plus `CLAUDE_PID`), `CODEX_SESSION_ID`, `COPILOT_AGENT_SESSION_ID`
-    (E-PROC-CC2, E-PROC-CX2, E-PROC-COP2), and orphans keep it. A non-session process in the worktree
+    `CLAUDE_CODE_SESSION_ID` (plus `CLAUDE_PID`), `CODEX_SESSION_ID`, `COPILOT_AGENT_SESSION_ID`,
+    `CURSOR_CONVERSATION_ID` (E-PROC-CC2, E-PROC-CX2, E-PROC-COP2, E-PROC-CUR4), and orphans keep it. A non-session process in the worktree
     is *lingering* when no live session process is among its ancestors. Orphans are reparented to
     `/init` on WSL, not pid 1, so test "ancestor is a live session", not "parent is 1"
     (E-PROC-OS1).
@@ -130,7 +133,8 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - The Claude Code worktree marker file name (E-CC-W3 says only that one exists).
 - herdr's worktree path and branch scheme; read its source.
 - Copilot CLI local `/worktree` layout.
-- Cursor's tool-subprocess markers and session-id variable (the CLI was not logged in for the
-  experiment, E-PROC-CUR1). macOS probe behaviour, observed rather than read from headers.
+- macOS probe behaviour, observed rather than read from headers (E-PROC-OS2).
+- Whether reading another process's environment (needed for the Cursor worker exclusion) works on
+  macOS for same-user processes.
 - Claude Code memory sharing across worktrees: `memory/` appeared only under the primary checkout
   (E-PROC-CC6); confirm against vendor docs.
