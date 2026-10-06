@@ -49,26 +49,33 @@ E-HERDR-W1), so the library reports `unknown` for them.
 
 - **Ownership and occupancy are separate facts.** A worktree has at most one *owner* (a lease),
   such as a cyberfleet Captain or Pod. It can have any number of *occupants*: the owner's
-  subagents, a reviewer or judge session, a watcher that updates docs. The library records and
-  reports occupants but never limits how many there are, what role they play, or who may write.
-  Coordinating writers is the caller's job, not the library's.
+  subagents, a reviewer or judge session, a watcher that updates docs. The library never limits how
+  many there are, what role they play, or who may write. Coordinating writers is the caller's job.
 - **Lease = git's worktree lock.** Claim a worktree by exclusive-creating
   `$GIT_COMMON_DIR/worktrees/<id>/locked` with a reason naming the library, a lease ID, and the
   holder. git then refuses to remove or prune it, and Claude Code's sweep never releases a lock it
   did not set (E-CC-W4). Whether git tolerates a structured reason, and whether the exclusive create
-  holds against `git worktree lock`, is unverified: spike it before building on it.
-- **A live agent session makes a worktree busy; a dev service does not.** Two signals:
-  - *Registered occupants.* A session that attaches records its session id, free-form role, PID,
-    and process start time (start time defeats PID reuse, E-TH-1). Liveness is the PID still
-    running with that start time. This is authoritative and works on every platform.
-  - *Discovered sessions.* An optional, injectable process probe finds harness processes whose
-    working directory is inside the worktree, so an unregistered session (a user typing `claude`
-    there) also counts. It must tell a harness's own session process from the tool subprocesses
-    the harness spawns: a `vite` or `vitest` launched from Claude Code's Bash tool inherits
-    `CLAUDECODE=1` but also carries `CLAUDE_CODE_CHILD_SESSION=1` (E-CC-D1, E-CC-D3), so
-    environment alone would misread it as a session. How to recognise each harness's session
-    process is unresearched; until it is, the probe reports `unknown` for that harness.
-  - Busy is reported as its own status, not folded into `dirty`, so callers can explain it.
+  holds against `git worktree lock`, is unverified: spike it before building on it. The lease is the
+  only record the library writes.
+- **A live agent session makes a worktree busy; a dev service does not.** Occupants are discovered,
+  not registered: an injectable process probe finds harness session processes whose working
+  directory is inside the worktree. It must tell a harness's own session process from the tool
+  subprocesses the harness spawns: a `vite` or `vitest` launched from Claude Code's Bash tool
+  inherits `CLAUDECODE=1` but also carries `CLAUDE_CODE_CHILD_SESSION=1` (E-CC-D1, E-CC-D3), so
+  environment alone would misread it as a session. How to recognise each harness's session process
+  is unresearched; until it is, the probe reports `unknown` for that harness. Busy is its own
+  status, not folded into `dirty`.
+  - *Why no registration.* Registration would only cover sessions discovery cannot see: a session
+    whose working directory is outside the worktree, one across a WSL, container, or remote
+    boundary, or a harness or platform the probe cannot read. Busy only gates recycle and remove,
+    and an owned worktree is already protected by its lease whatever runs inside it. So a blind spot
+    matters only for an unowned worktree holding an unseen session, which was judged not to matter
+    (decision 2026-10-05). Sessions in unowned worktrees, such as a user running `claude` there, are
+    the ones nobody would register anyway.
+  - *Release does not recycle.* An owner may release while its judge or watcher still runs.
+    Recycling happens at the next `acquire`, after the probe.
+  - *Probe returns `unknown`.* Reuse proceeds, and the skip report marks the worktree unverified;
+    a caller can opt into the stricter rule.
 - **Lingering dev services are reported, never killed.** Processes inside the worktree that are not
   agent sessions (dev servers, test watchers) do not block reuse. When no live session launched
   them, the library lists them as lingering so a caller can reclaim the resources. Shutting
@@ -91,5 +98,5 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - Copilot CLI local `/worktree` layout.
 - How to recognise each harness's session process (executable, arguments, environment) as distinct
   from the tool subprocesses it spawns, on Linux, macOS, and Windows. Needed by the process probe.
-- Whether a session's working directory reliably identifies the worktree it works in (Claude Code
-  `--add-dir`, a session started in the primary checkout that edits a worktree).
+- Whether a harness changes its own process working directory when it enters a worktree (Claude
+  Code `EnterWorktree`), which decides whether the probe sees it.

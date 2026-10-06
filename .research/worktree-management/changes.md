@@ -12,3 +12,10 @@ Captain or Pod's worktree can host subagents, judges, and watchers at once with 
 the library. A live agent session now marks a worktree busy; a dev service does not, and orphaned
 dev services are reported as lingering. Added open questions on recognising a harness's session
 process.
+
+## 2026-10-05 — discovery only
+
+Dropped registered occupants. The lease is the only record the library writes; occupants are found
+by the process probe. Registration covered only sessions the probe cannot see, and those matter
+only in an unowned worktree, which was judged acceptable. Release no longer recycles; the next
+acquire does, after the probe.
