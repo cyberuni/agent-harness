@@ -6,5 +6,18 @@ export type { ForgeMergedProbe, LandedSignal } from './landed.js'
 export { ghForgeMergedProbe } from './landed.js'
 export type { ListWorktreesOptions, PrimaryRootOptions, WorktreeEntry } from './list-worktrees.js'
 export { listWorktrees, normalizeWorktreePath, primaryRoot } from './list-worktrees.js'
+export type {
+	LeftoverProcess,
+	LeftoverReason,
+	OccupancyOptions,
+	ProbeOptions,
+	ProcessProbe,
+	Session,
+	WorktreeOccupancy,
+} from './occupancy.js'
+export { occupants, probeProcesses } from './occupancy.js'
 export type { ClassifyOwnerOptions, LeaseReason, WorktreeOwner, WorktreeOwnerKind } from './owner.js'
 export { classifyOwner, LEASE_LIBRARY, parseLeaseReason } from './owner.js'
+export type { ProcessInfo, ProcessSource } from './process-source.js'
+export { procfsProcessSource } from './process-source.js'
+export type { SessionHarnessId } from './session-signatures.js'
