@@ -95,9 +95,15 @@ describe('classifyOwner', () => {
 		expect(await ownerOf(path, codexHome)).toBe('unknown')
 	})
 
-	it('classifies an unmarked worktree, even in our own layout, as unknown', async () => {
+	it('classifies an unlocked worktree at one of our slots as self: a released lease', async () => {
 		const path = add(join(root, 'repo.worktrees', 'repo-1'))
-		expect(await ownerOf(path)).toBe('unknown')
+		expect(await ownerOf(path)).toBe('self')
+	})
+
+	it('classifies an unmarked worktree off our slot names as unknown', async () => {
+		expect(await ownerOf(add(join(root, 'repo.worktrees', 'feature-x')))).toBe('unknown')
+		expect(await ownerOf(add(join(root, 'repo.worktrees', 'repo-01')))).toBe('unknown')
+		expect(await ownerOf(add(join(root, 'elsewhere', 'repo-2')))).toBe('unknown')
 	})
 
 	it('classifies a lock with a foreign reason as unknown', async () => {

@@ -1,12 +1,15 @@
 import { sep } from 'node:path'
 
 import type { WorktreeEntry } from './list-worktrees.js'
+import { slotNumber } from './naming.js'
 
 /**
  * Who a worktree belongs to. Only `self`, a worktree this library leased, may be reused or removed;
  * every other owner is foreign and left alone.
  *
- * - `self`: locked with this library's lease.
+ * - `self`: locked with this library's lease, or an idle slot the library created: unlocked, at a
+ *   library-assigned path (`slotPath`). A lease is a lock that release deletes (E-GIT-L1), so the
+ *   slot path is what still marks a released worktree as ours.
  * - `claude-code`, `codex`: recognised by a researched marker.
  * - `cursor`: not produced yet. Its worktree root rests on a forum post only (E-CUR-W1, Low), so a
  *   Cursor worktree reports `unknown` until that is verified.
@@ -66,6 +69,9 @@ export function classifyOwner(entry: WorktreeEntry, options: ClassifyOwnerOption
 	// the path, since a `WorktreeCreate` hook may place the worktree anywhere (E-CC-W5).
 	if (entry.locked?.startsWith('claude session ')) return { owner: 'claude-code', research: ['E-CC-W4', 'E-PROC-CC5'] }
 	if (!entry.linked) return { owner: 'user', research: [] }
+	// Any other lock is someone's hold, even on one of our slots; only an unlocked slot is idle.
+	if (entry.locked === undefined && slotNumber(options.primaryRoot, entry.root) !== undefined)
+		return { owner: 'self', research: [] }
 	if (isInside(entry.root, `${options.primaryRoot}${sep}.claude${sep}worktrees`))
 		return { owner: 'claude-code', research: ['E-CC-W1'] }
 	if (options.codexHome && isInside(entry.root, `${options.codexHome}${sep}worktrees`))
