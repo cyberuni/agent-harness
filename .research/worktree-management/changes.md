@@ -36,3 +36,10 @@ still names the repo.
 Ran the lease spike against git 2.56.0 and read `lock_worktree` in git's source. An exclusively
 created `locked` file works as a lease. `git worktree lock` can overwrite it in a narrow race, so
 the design reads the lease back after claiming and before destructive steps. Added E-GIT-L1 to L6.
+
+## 2026-10-05 — session processes
+
+Ran Claude Code, Codex, and Copilot CLI headless and read `/proc` (E-PROC-*). A session is
+recognised by its executable, not its environment, because nested sessions inherit tool markers.
+Lingering services are linked by ancestry and session-id variables. Recorded path-keyed harness
+state and Claude Code's lock-reason format. Cursor's tool environment remains untested.

@@ -65,13 +65,27 @@ E-HERDR-W1), so the library reports `unknown` for them.
     and the library itself never passes `-f -f`.
   - Write the reason on one line; git C-quotes it in porcelain output (E-GIT-L2).
 - **A live agent session makes a worktree busy; a dev service does not.** Occupants are discovered,
-  not registered: an injectable process probe finds harness session processes whose working
-  directory is inside the worktree. It must tell a harness's own session process from the tool
-  subprocesses the harness spawns: a `vite` or `vitest` launched from Claude Code's Bash tool
-  inherits `CLAUDECODE=1` but also carries `CLAUDE_CODE_CHILD_SESSION=1` (E-CC-D1, E-CC-D3), so
-  environment alone would misread it as a session. How to recognise each harness's session process
-  is unresearched; until it is, the probe reports `unknown` for that harness. Busy is its own
-  status, not folded into `dirty`.
+  not registered, by an injectable process probe. Busy is its own status, not folded into `dirty`.
+  - *What counts as a session: the executable, never the environment.* A nested `claude -p` run
+    from a tool shell inherits every Claude Code tool marker, including the outer session's id and
+    pid (E-PROC-CC3), so environment cannot separate it from a `vite` the same shell started. Match
+    the executable instead: Claude Code `*/claude/versions/*` (E-PROC-CC1), Codex `*/codex`
+    (E-PROC-CX1), Copilot `*/copilot` with a possible ` (deleted)` suffix after auto-update
+    (E-PROC-COP1), Cursor a `node` whose argv names `cursor-agent` (E-PROC-CUR1). Helper children
+    (`codex-code-mode-host`) and stale daemon pid files are not sessions.
+  - *Where it works: the session's own cwd.* Claude Code moves its process cwd into a worktree it
+    enters (E-PROC-CC5), so the cwd check sees it. For Claude Code, `~/.claude/sessions/<pid>.json`
+    records `cwd` and `procStart` for each live session (E-PROC-CC4); it is undocumented, so use it
+    only as a cross-check.
+  - *Linking a service to its session.* Each harness stamps a session id on its tool processes:
+    `CLAUDE_CODE_SESSION_ID` (plus `CLAUDE_PID`), `CODEX_SESSION_ID`, `COPILOT_AGENT_SESSION_ID`
+    (E-PROC-CC2, E-PROC-CX2, E-PROC-COP2), and orphans keep it. A non-session process in the worktree
+    is *lingering* when no live session process is among its ancestors. Orphans are reparented to
+    `/init` on WSL, not pid 1, so test "ancestor is a live session", not "parent is 1"
+    (E-PROC-OS1).
+  - *Platforms.* Linux reads `/proc`. macOS has `proc_pidinfo` and `proc_pidpath` (E-PROC-OS2).
+    Windows has no documented way to read another process's cwd (E-PROC-OS3), so the default probe
+    there reports `unknown`.
   - *Why no registration.* Registration would only cover sessions discovery cannot see: a session
     whose working directory is outside the worktree, one across a WSL, container, or remote
     boundary, or a harness or platform the probe cannot read. Busy only gates recycle and remove,
@@ -96,6 +110,13 @@ E-HERDR-W1), so the library reports `unknown` for them.
   passes `legion-<id6>`, E-LEG-1) describes the first task and misleads every later one once the
   worktree is reused (decision 2026-10-05). What the worktree is for lives in its branch and its
   lease holder, both of which change on reuse. Treehouse names slots the same way (E-TH-7).
+- **A reused path inherits path-keyed harness state.** Claude Code and Cursor key per-project
+  state by working directory (E-PROC-CC6, E-PROC-CUR2), so in a reused worktree `claude --continue`
+  resumes the previous task's conversation. Codex and Copilot key by session id (E-PROC-CX3,
+  E-PROC-COP3). The library reports `reused` and the previous branch so callers can start fresh
+  sessions; it does not delete harness state.
+- **Recognise Claude Code worktrees by their lock reason.** `claude session <name> (pid N start T)`
+  (E-PROC-CC5) names the owner and lets a stale lock be told from a live one.
 - **Recycle without `-x`.** `read-tree --reset -u <base>` then `clean -fd` keeps `node_modules`
   (E-TH-3). cyber-mux's `clean -fdx` throws away the install reuse is meant to save (E-MUX-6,
   E-MUX-8).
@@ -109,9 +130,7 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - The Claude Code worktree marker file name (E-CC-W3 says only that one exists).
 - herdr's worktree path and branch scheme; read its source.
 - Copilot CLI local `/worktree` layout.
-- How to recognise each harness's session process (executable, arguments, environment) as distinct
-  from the tool subprocesses it spawns, on Linux, macOS, and Windows. Needed by the process probe.
-- Whether a harness keys per-project state by the worktree's path (for example Claude Code's
-  project transcripts and memory), so that a reused path carries one task's history into the next.
-- Whether a harness changes its own process working directory when it enters a worktree (Claude
-  Code `EnterWorktree`), which decides whether the probe sees it.
+- Cursor's tool-subprocess markers and session-id variable (the CLI was not logged in for the
+  experiment, E-PROC-CUR1). macOS probe behaviour, observed rather than read from headers.
+- Claude Code memory sharing across worktrees: `memory/` appeared only under the primary checkout
+  (E-PROC-CC6); confirm against vendor docs.

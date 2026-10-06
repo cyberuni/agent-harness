@@ -62,3 +62,29 @@ from a README or implied. **Low** means indirect.
 | E-GIT-L4 | `git worktree remove -f -f` removes a locked worktree, and `git worktree unlock` deletes the `locked` file whoever wrote it | direct experiment, git 2.56.0 | 2026-10-05 | High — direct observation |
 | E-GIT-L5 | `lock_worktree` checks `worktree_lock_reason(wt)` and then calls `write_file(path, "%s", reason)`, which creates with truncate, not exclusively. A `git worktree lock` whose check runs before our create can overwrite our lease | https://raw.githubusercontent.com/git/git/v2.56.0/builtin/worktree.c (`lock_worktree`) | 2026-10-05 | High — source |
 | E-GIT-L6 | `remove_worktree` reads the lock reason only when `force < 2` | same file (`remove_worktree`) | 2026-10-05 | High — source |
+
+## Session processes (Linux/WSL, 2026-10-05)
+
+Direct experiments ran each CLI headless in a temp repo and read `/proc`. Versions: Claude Code
+2.1.290–2.1.291, codex-cli 0.159.3, cursor-agent 2026.09.28-64d2043, Copilot CLI 1.0.90–1.0.92.
+Environment captures recorded variable names only.
+
+| ID | Claim | Source | Date | Confidence |
+|---|---|---|---|---|
+| E-PROC-CC1 | The Claude Code session is one native process: exe `~/.local/share/claude/versions/<ver>`, argv0 `claude`; its own environment carries no `CLAUDECODE` | direct experiment, Claude Code 2.1.290/2.1.291 | 2026-10-05 | High — direct observation |
+| E-PROC-CC2 | Tool subprocesses carry `CLAUDECODE`, `CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_SESSION_ID`, `CLAUDE_PID` (the launching session's pid), `CLAUDE_CODE_ENTRYPOINT`, `AI_AGENT`; an orphaned background child keeps them | direct experiment | 2026-10-05 | High — direct observation |
+| E-PROC-CC3 | A nested `claude -p` run from a Claude Code tool shell inherits `CLAUDECODE`, `CLAUDE_CODE_CHILD_SESSION`, and the outer session's `CLAUDE_PID` and `CLAUDE_CODE_SESSION_ID`; environment alone cannot tell a nested session from a tool process | direct experiment | 2026-10-05 | High — direct observation |
+| E-PROC-CC4 | Each live session writes `~/.claude/sessions/<pid>.json` with `pid`, `sessionId`, `cwd`, `procStart`, `kind`, `entrypoint`; a `-p` run removes it on exit | direct experiment | 2026-10-05 | High — direct observation, undocumented |
+| E-PROC-CC5 | `claude -p --worktree <name>` starts with cwd at the launch directory, then changes its own process cwd to `<repo>/.claude/worktrees/<name>`; it creates branch `worktree-<name>` and locks the worktree with reason `claude session <name> (pid N start T)`, which outlives the process | direct experiment | 2026-10-05 | High — direct observation |
+| E-PROC-CC6 | Claude Code keys transcripts by cwd: `~/.claude/projects/<cwd, non-alphanumerics → '-'>/`; each `legion-*` worktree has its own folder, while `memory/` exists only under the primary checkout's folder | direct observation of `~/.claude/projects` | 2026-10-05 | High for transcripts; Medium for memory |
+| E-PROC-CX1 | The Codex session is native: exe `…/codex/<ver>/bin/codex`, argv0 `codex`, no marker in its own environment; helper child `codex-code-mode-host`; an `app-server-daemon` pid file can exist without a live daemon | direct experiment, codex-cli 0.159.3 | 2026-10-05 | High — direct observation |
+| E-PROC-CX2 | Codex tool subprocesses carry `CODEX_SESSION_ID` (= `CODEX_THREAD_ID`), `CODEX_CI`, `CODEX_VERSION`; no pid variable. A plain `&` child died when the tool call returned; a `setsid` child survived with the session id | direct experiment | 2026-10-05 | High — direct observation |
+| E-PROC-CX3 | Codex state is not keyed by path: `~/.codex/sessions/YYYY/MM/DD/rollout-<ts>-<id>.jsonl`, cwd recorded inside | direct observation of `~/.codex` | 2026-10-05 | High |
+| E-PROC-CUR1 | The Cursor session is one process: exe `…/cursor-agent/versions/<ver>/node`, argv `~/.local/bin/cursor-agent --use-system-ca …/index.js`, own env `CURSOR_INVOKED_AS=cursor-agent`. Tool-subprocess markers untested (CLI not logged in) | direct experiment, cursor-agent 2026.09.28-64d2043 | 2026-10-05 | High for the process; tool env unknown |
+| E-PROC-CUR2 | Cursor keys state by path: `~/.cursor/projects/<truncated slug>-<hash>/` | direct observation | 2026-10-05 | Medium |
+| E-PROC-COP1 | The Copilot CLI session is native: exe `…/copilot-cli/<ver>/copilot`, argv0 `copilot`; after an in-place auto-update `/proc/<pid>/exe` reads `… (deleted)` | direct experiment, Copilot CLI 1.0.90–1.0.92 | 2026-10-05 | High — direct observation |
+| E-PROC-COP2 | Copilot tool shells (`/bin/bash --norc --noprofile -c`) carry `COPILOT_CLI`, `COPILOT_AGENT_SESSION_ID`; no pid variable. `copilot -p` waits for plain `&` children before exiting; a `setsid` child survives with the session id | direct experiment | 2026-10-05 | High — direct observation |
+| E-PROC-COP3 | Copilot state is not keyed by path: `~/.copilot/session-state/<session-id>/`, cwd recorded in `workspace.yaml` | direct observation | 2026-10-05 | High |
+| E-PROC-OS1 | On WSL an orphan is reparented to the distro's `/init` (pid 482 here), not pid 1 | direct experiment | 2026-10-05 | High — direct observation |
+| E-PROC-OS2 | macOS: `proc_pidinfo(PROC_PIDVNODEPATHINFO)` returns another process's cwd, `proc_pidpath` its executable | https://opensource.apple.com/source/xnu/xnu-7195.81.3/libsyscall/wrappers/libproc/libproc.h.auto.html | 2026-10-05 | Medium — header, same-uid limit inferred |
+| E-PROC-OS3 | Windows has no documented API for another process's cwd; it needs `NtQueryInformationProcess` plus reading the PEB, which Microsoft says may change | https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationprocess | 2026-10-05 | High — vendor doc |
