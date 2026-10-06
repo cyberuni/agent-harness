@@ -1,16 +1,10 @@
 import { mkdirSync, rmdirSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
+import { createOutput, defineFormatOption, type Output, type OutputFormat, renderText } from '@clibuilder/axi'
 import type { cli } from 'clibuilder'
 import { command, exitCodes, z } from 'clibuilder'
-import {
-	collapseHome,
-	type OutputFormat,
-	parseFormat,
-	renderText,
-	writeDocument,
-	writeResult,
-} from '../command-output/command-output.js'
+import { collapseHome } from '../command-output/collapse-home.js'
 import { readTemplate, templateWarnings, withMergeSections } from './create-reference.js'
 import { listReferences, type ReferenceRow, type SearchMatch, searchReferences } from './reference-catalog.js'
 import {
@@ -87,7 +81,7 @@ export type ReferenceDeleteReport = {
 
 export type ReferenceSearchReport = { query: string; references: SearchMatch[] | string }
 
-type CommonArgs = { root: string | undefined; format: string | undefined }
+type CommonArgs = { root: string | undefined; format: OutputFormat | undefined }
 
 const rootOption = {
 	description:
@@ -151,10 +145,10 @@ function missReason(entry: ReferenceShowEntry): string {
 	return `no reference named "${entry.name}" in any tier.${hint}`
 }
 
-function writeShowText(entries: readonly ReferenceShowEntry[]): void {
+function writeShowText(output: Output, entries: readonly ReferenceShowEntry[]): void {
 	if (entries.length === 1) {
 		const [entry] = entries as [ReferenceShowEntry]
-		if (entry.content !== undefined) writeDocument(entry.content)
+		if (entry.content !== undefined) output.document(entry.content)
 		return
 	}
 	const blocks = entries.map((entry) =>
@@ -162,7 +156,7 @@ function writeShowText(entries: readonly ReferenceShowEntry[]): void {
 			? `<reference name="${entry.name}" status="${entry.status}" />`
 			: `<reference name="${entry.name}" tier="${entry.tier}">\n${entry.content}</reference>`,
 	)
-	writeDocument(blocks.join('\n\n'))
+	output.document(blocks.join('\n\n'))
 }
 
 function writeShowStderr(entries: readonly ReferenceShowEntry[], format: OutputFormat): void {
@@ -192,16 +186,15 @@ function showCommand(layersFor: LayersFor): cli.Command {
 				description: 'Report every path checked, the file that matched, the merge mode, and why a layer was dropped.',
 				type: z.optional(z.boolean()),
 			},
-			format: {
+			format: defineFormatOption({
+				default: 'text',
 				description:
 					'Output format: text (default) writes the documents themselves; toon and json return an array with metadata.',
-				type: z.optional(z.string()),
-				default: 'text',
-			},
+			}),
 		},
 		async run(args: CommonArgs & { names: string[]; trace: boolean | undefined }) {
 			try {
-				const format = parseFormat(args.format)
+				const output = createOutput(args.format ?? 'text')
 				const names = args.names.map(parseReferenceName)
 				if (!names.length) throw new Error('Name at least one reference.')
 				const home = homedir()
@@ -217,9 +210,9 @@ function showCommand(layersFor: LayersFor): cli.Command {
 							: []
 					return showEntry(resolved, home, suggestions, Boolean(args.trace))
 				})
-				if (format === 'text') writeShowText(entries)
-				else writeResult(entries, format)
-				writeShowStderr(entries, format)
+				if (output.format === 'text') writeShowText(output, entries)
+				else output.result(entries)
+				writeShowStderr(entries, output.format)
 				return entries.every((entry) => entry.status === 'found') ? exitCodes.success : exitCodes.error
 			} catch (error) {
 				return fail(error, 'Reference lookup failed.')
@@ -228,11 +221,9 @@ function showCommand(layersFor: LayersFor): cli.Command {
 	})
 }
 
-const listFormatOption = {
+const listFormatOption = defineFormatOption({
 	description: 'Output format: toon (default), json, or text for a human-readable report.',
-	type: z.optional(z.string()),
-	default: 'toon',
-}
+})
 
 function listCommand(layersFor: LayersFor): cli.Command {
 	return command({
@@ -241,7 +232,7 @@ function listCommand(layersFor: LayersFor): cli.Command {
 		options: { root: rootOption, format: listFormatOption },
 		async run(args: CommonArgs) {
 			try {
-				const format = parseFormat(args.format)
+				const output = createOutput(args.format)
 				const home = homedir()
 				const layers = await layersFor(args, home)
 				const { rows, warnings } = listReferences(layers, { display: (path) => collapseHome(home, path) })
@@ -257,7 +248,7 @@ function listCommand(layersFor: LayersFor): cli.Command {
 						: '0 references — no layer holds one',
 				}
 				if (warnings.length) report.warnings = warnings
-				writeResult(report, format)
+				output.result(report)
 				return exitCodes.success
 			} catch (error) {
 				return fail(error, 'Reference listing failed.')
@@ -274,7 +265,7 @@ function searchCommand(layersFor: LayersFor): cli.Command {
 		options: { root: rootOption, format: listFormatOption },
 		async run(args: CommonArgs & { query: string }) {
 			try {
-				const format = parseFormat(args.format)
+				const output = createOutput(args.format)
 				const query = args.query.trim()
 				if (!query) throw new Error('Search needs a query.')
 				const home = homedir()
@@ -285,7 +276,7 @@ function searchCommand(layersFor: LayersFor): cli.Command {
 					query,
 					references: matches.length ? matches : `0 references match "${query}"`,
 				}
-				writeResult(report, format)
+				output.result(report)
 				return exitCodes.success
 			} catch (error) {
 				return fail(error, 'Reference search failed.')
@@ -317,7 +308,7 @@ function whereCommand(layersFor: LayersFor): cli.Command {
 		},
 		async run(args: CommonArgs & { name: string; caller: string | undefined }) {
 			try {
-				const format = parseFormat(args.format)
+				const output = createOutput(args.format)
 				const name = parseReferenceName(args.name)
 				const home = homedir()
 				const layers = await layersFor(args, home)
@@ -326,7 +317,7 @@ function whereCommand(layersFor: LayersFor): cli.Command {
 					caller: args.caller === undefined ? undefined : resolve(args.caller),
 					display: (path) => collapseHome(home, path),
 				})
-				writeResult(report, format)
+				output.result(report)
 				if (!report.plugins) return exitCodes.success
 				process.stderr.write(
 					`error: ${missReason({ name: name.raw, status: 'ambiguous', plugins: report.plugins, warnings: [] })}\n`,
@@ -376,16 +367,15 @@ function createCommand(layersFor: LayersFor): cli.Command {
 				description: 'Print the target path and the exact content, and write nothing.',
 				type: z.optional(z.boolean()),
 			},
-			format: {
+			format: defineFormatOption({
+				default: 'text',
 				description:
 					'Output format: text (default) writes the path, then the content or the trace; toon and json return an object.',
-				type: z.optional(z.string()),
-				default: 'text',
-			},
+			}),
 		},
 		async run(args: CreateArgs) {
 			try {
-				const format = parseFormat(args.format)
+				const output = createOutput(args.format ?? 'text')
 				const name = parseReferenceName(args.name)
 				if (name.plugin !== undefined) {
 					throw new Error(
@@ -429,11 +419,11 @@ function createCommand(layersFor: LayersFor): cli.Command {
 					writeFileSync(target, content, { flag: 'wx' })
 					report.trace = traceOf(resolveReference(name, layers, { display }), home)
 				}
-				if (format !== 'text') writeResult(report, format)
+				if (output.format !== 'text') output.result(report)
 				else {
 					for (const warning of warnings) process.stderr.write(`warning: ${warning}\n`)
-					if (report.trace) process.stdout.write(`${report.path}\n\n${renderText({ trace: report.trace })}\n`)
-					else writeDocument(`${report.path}\n\n${content}`)
+					if (report.trace) output.document(`${report.path}\n\n${renderText({ trace: report.trace })}`)
+					else output.document(`${report.path}\n\n${content}`)
 				}
 				return exitCodes.success
 			} catch (error) {
@@ -490,16 +480,15 @@ function deleteCommand(layersFor: LayersFor): cli.Command {
 				description: 'Print the file that would be deleted and what would answer the name then, and delete nothing.',
 				type: z.optional(z.boolean()),
 			},
-			format: {
+			format: defineFormatOption({
+				default: 'text',
 				description:
 					'Output format: text (default) writes the path, what answers next, and the trace; toon and json return an object.',
-				type: z.optional(z.string()),
-				default: 'text',
-			},
+			}),
 		},
 		async run(args: DeleteArgs) {
 			try {
-				const format = parseFormat(args.format)
+				const output = createOutput(args.format ?? 'text')
 				const name = parseReferenceName(args.name)
 				if (name.plugin !== undefined) {
 					throw new Error(
@@ -539,10 +528,10 @@ function deleteCommand(layersFor: LayersFor): cli.Command {
 					next: nextOf(after, home),
 					trace: traceOf(after, home),
 				}
-				if (format !== 'text') writeResult(report, format)
+				if (output.format !== 'text') output.result(report)
 				else {
-					process.stdout.write(
-						`${report.path}\n\n${dryRun ? 'would delete' : 'deleted'}. ${describeNext(report.name, report.next)}\n\n${renderText({ trace: report.trace })}\n`,
+					output.document(
+						`${report.path}\n\n${dryRun ? 'would delete' : 'deleted'}. ${describeNext(report.name, report.next)}\n\n${renderText({ trace: report.trace })}`,
 					)
 				}
 				return exitCodes.success

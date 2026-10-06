@@ -2,10 +2,11 @@
 
 No agent-layer dependencies. This package sits under the agent tools (`universal-plugin`,
 `buddy-agent-harness`, `repobuddy`, `cyber-*`), so it must never depend on one of them or on
-another agent-layer package. Ordinary npm libraries (`yaml`, `clibuilder`, `@toon-format/toon`)
+another agent-layer package. Ordinary npm libraries (`yaml`, `clibuilder`, `@clibuilder/axi`)
 are fine. The root entry (`.`) keeps its published declarations free of `@types/node` and of
-`clibuilder`; the clibuilder commands live behind the `./commands` subpath. `src/command-output` is internal:
-the bin and the commands write with it, but no subpath exports it.
+`clibuilder`; the clibuilder commands live behind the `./commands` subpath. Commands write
+`--format` output through `@clibuilder/axi` (`defineFormatOption`, `createOutput`); `src/command-output`
+keeps only what axi does not cover, and no subpath exports it.
 
 ## Screaming Architecture
 

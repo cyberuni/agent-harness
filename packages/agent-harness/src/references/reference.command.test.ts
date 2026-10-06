@@ -951,24 +951,6 @@ describe('show output', () => {
 		expect(await show(['name.md'], { root })).toBe(1)
 		expect(stderrLines().some((line) => line.includes('names a file'))).toBe(true)
 	})
-
-	it('rejects an unsupported output format', async () => {
-		const root = repo()
-
-		expect(await show(['name'], { root, format: 'yaml' })).toBe(1)
-		expect(stderrLines()).toContain('error: --format must be toon, json, or text.\n')
-		expect(stdout).not.toHaveBeenCalled()
-
-		stderr.mockClear()
-		expect(await list({ root, format: 'yaml' })).toBe(1)
-		expect(stderrLines()).toContain('error: --format must be toon, json, or text.\n')
-		expect(stdout).not.toHaveBeenCalled()
-
-		stderr.mockClear()
-		expect(await search('anything', { root, format: 'yaml' })).toBe(1)
-		expect(stderrLines()).toContain('error: --format must be toon, json, or text.\n')
-		expect(stdout).not.toHaveBeenCalled()
-	})
 })
 
 // ── list ──
@@ -1564,14 +1546,6 @@ describe('create', () => {
 		expect(existsSync(join(root, '.agents'))).toBe(false)
 	})
 
-	it('rejects an unsupported output format on create', async () => {
-		const root = repo()
-
-		expect(await create('onboarding', { root, format: 'yaml' })).toBe(1)
-		expect(stdout).not.toHaveBeenCalled()
-		expect(existsSync(join(root, '.agents'))).toBe(false)
-	})
-
 	it('refuses when the target folder cannot be created', async () => {
 		const root = repo()
 		write(root, '.agents/references', 'a file\n')
@@ -1762,7 +1736,6 @@ describe('delete', () => {
 		expect(stderrLines()[0]).toContain('bare name')
 		expect(await remove('../onboarding', { root })).toBe(1)
 		expect(await remove('onboarding', { root, scope: 'plugin' })).toBe(1)
-		expect(await remove('onboarding', { root, format: 'yaml' })).toBe(1)
 		expect(existsSync(join(root, '.agents/references/onboarding.md'))).toBe(true)
 	})
 
