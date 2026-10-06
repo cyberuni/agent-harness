@@ -19,13 +19,13 @@ async function sourceFiles(dir: string): Promise<string[]> {
 describe('research citations', () => {
 	it('cites only evidence IDs that exist in a research topic', async () => {
 		const evidence = (await Promise.all(evidencePaths.map((path) => readFile(path, 'utf8')))).join('\n')
-		const known = new Set([...evidence.matchAll(/^\| (E-[A-Z]+-[A-Z]\d+) \|/gm)].map((m) => m[1]))
+		const known = new Set([...evidence.matchAll(/^\| (E-[A-Z]+-[A-Z]\d+|E-PROC-[A-Z]+\d+) \|/gm)].map((m) => m[1]))
 
 		const cited = new Set<string>()
 		for (const file of await sourceFiles(srcDir)) {
 			const text = await readFile(file, 'utf8')
 			for (const match of text.matchAll(
-				/\bE-(?:CC|CUR|CODEX|COPILOT|OC|KILO|GEM|QWEN|VSC|CLINE|CRUSH|OH|AUG)-[A-Z]\d+\b/g,
+				/\bE-(?:(?:CC|CUR|CODEX|COPILOT|OC|KILO|GEM|QWEN|VSC|CLINE|CRUSH|OH|AUG)-[A-Z]\d+|PROC-[A-Z]+\d+)\b/g,
 			))
 				cited.add(match[0])
 		}
