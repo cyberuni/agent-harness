@@ -68,3 +68,8 @@ account was out of usage.
 
 Added the Antigravity CLI (`agy` 1.2.17) session signature and its `ANTIGRAVITY_CONVERSATION_ID`
 link (E-PROC-AGY1).
+
+## 2026-10-05 — `.worktreeinclude` detail
+
+Added E-CC-W6: where Claude Code reads `.worktreeinclude`, the ignored-only rule, and how a `**/`
+pattern reaches into a wholly ignored directory. Backs `seedWorktree`.
