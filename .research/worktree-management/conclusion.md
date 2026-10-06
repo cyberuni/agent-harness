@@ -68,24 +68,42 @@ E-HERDR-W1), so the library reports `unknown` for them.
   not registered, by an injectable process probe. Busy is its own status, not folded into `dirty`.
   - *What counts as a session: the executable, never the environment.* A nested `claude -p` run
     from a tool shell inherits every Claude Code tool marker, including the outer session's id and
-    pid (E-PROC-CC3), so environment cannot separate it from a `vite` the same shell started. Match
-    the executable instead: Claude Code `*/claude/versions/*` (E-PROC-CC1), Codex `*/codex`
-    (E-PROC-CX1), Copilot `*/copilot` with a possible ` (deleted)` suffix after auto-update
-    (E-PROC-COP1), Cursor a `node` whose argv names `cursor-agent` (E-PROC-CUR1). Helper children
-    (`codex-code-mode-host`) and stale daemon pid files are not sessions. Cursor's worker shares the
-    session's exe and argv and can outlive it (E-PROC-CUR3); exclude a process carrying
-    `AGENT_CLI_SOCKET_PATH`, or an orphaned worker keeps a worktree busy forever. Report it as
-    lingering instead.
+    pid (E-PROC-CC3), so environment cannot separate it from a `vite` the same shell started. The
+    session process's own environment is no help either: harnesses set their markers only on
+    children (E-PROC-ENV1). Match executable and argv against a per-harness signature table:
+
+    | Harness | Session process | Not a session (same exe) | Tool-process link |
+    | --- | --- | --- | --- |
+    | Claude Code | exe `*/claude/versions/*` (E-PROC-CC1) | — | `CLAUDE_CODE_SESSION_ID`, `CLAUDE_PID` |
+    | Codex | exe `*/codex` (E-PROC-CX1) | `codex-code-mode-host` | `CODEX_SESSION_ID` |
+    | Copilot CLI | exe `*/copilot`, maybe ` (deleted)` (E-PROC-COP1) | — | `COPILOT_AGENT_SESSION_ID` |
+    | Cursor | `node`, argv names `cursor-agent` (E-PROC-CUR1) | worker with `AGENT_CLI_SOCKET_PATH` (E-PROC-CUR3) | `CURSOR_CONVERSATION_ID` |
+    | opencode | exe `*/opencode` (E-PROC-OC1) | — | `OPENCODE_PID` |
+    | Kilo | native `*/cli-linux-x64/bin/kilo` + `node` wrapper (E-PROC-KILO1) | — | `KILO_PID`, `KILO_RUN_ID` |
+    | Qwen Code | `node`, argv `*/qwen-code/cli-entry.js` (E-PROC-QWEN1) | — | `QWEN_CODE_SESSION_ID` |
+    | Crush | native `*/crush/bin/crush` + `node` wrapper (E-PROC-CRUSH1) | — | none |
+    | Gemini CLI | `node`, argv `*/gemini-cli/bundle/gemini.js`, wrapper + relaunch child (E-PROC-GEM1) | — | unobserved |
+    | Goose | exe `*/goose` with `run` or `session` (E-PROC-GOOSE1) | — | `AGENT_SESSION_ID` |
+    | OpenHands | `python`, argv `*/openhands` (E-PROC-OH1) | `tmux -Lopenhands` server | none (`TMUX` only) |
+    | Cline | native `*/cli-linux-x64/bin/cline` + `node` wrapper (E-PROC-CLINE1) | `--cline-hub-daemon` | none |
+
+    A wrapper and its native or relaunched child are one session; either in the worktree makes it
+    busy. Auggie was not runnable and has no signature; an unknown harness is invisible to the probe.
   - *Where it works: the session's own cwd.* Claude Code moves its process cwd into a worktree it
     enters (E-PROC-CC5), so the cwd check sees it. For Claude Code, `~/.claude/sessions/<pid>.json`
     records `cwd` and `procStart` for each live session (E-PROC-CC4); it is undocumented, so use it
     only as a cross-check.
-  - *Linking a service to its session.* Each harness stamps a session id on its tool processes:
-    `CLAUDE_CODE_SESSION_ID` (plus `CLAUDE_PID`), `CODEX_SESSION_ID`, `COPILOT_AGENT_SESSION_ID`,
-    `CURSOR_CONVERSATION_ID` (E-PROC-CC2, E-PROC-CX2, E-PROC-COP2, E-PROC-CUR4), and orphans keep it. A non-session process in the worktree
-    is *lingering* when no live session process is among its ancestors. Orphans are reparented to
-    `/init` on WSL, not pid 1, so test "ancestor is a live session", not "parent is 1"
-    (E-PROC-OS1).
+  - *Linking a service to its session.* Most harnesses stamp a session id or pid on their tool
+    processes, and orphans keep it (table above). A non-session process in the worktree is
+    *lingering* when no live session is among its ancestors and its link variable, if any, names no
+    live session. Orphans are reparented to `/init` on WSL, not pid 1, so test "ancestor is a live
+    session", not "parent is 1" (E-PROC-OS1). Some live tool processes have no session ancestor at
+    all: cline runs tools under a shared hub daemon (E-PROC-CLINE1), OpenHands under a tmux server
+    (E-PROC-OH1), and a qwen tool shell was seen reparented while its session ran (E-PROC-QWEN1).
+    With no link variable either (cline, OpenHands, crush), the probe cannot tell orphaned from
+    live, so it reports such a process as *unlinked* rather than lingering. Long-lived helpers that
+    serve many sessions (cline's hub) are reported as lingering only when no session of that harness
+    is alive.
   - *Platforms.* Linux reads `/proc`. macOS has `proc_pidinfo` and `proc_pidpath` (E-PROC-OS2).
     Windows has no documented way to read another process's cwd (E-PROC-OS3), so the default probe
     there reports `unknown`.
@@ -113,11 +131,16 @@ E-HERDR-W1), so the library reports `unknown` for them.
   passes `legion-<id6>`, E-LEG-1) describes the first task and misleads every later one once the
   worktree is reused (decision 2026-10-05). What the worktree is for lives in its branch and its
   lease holder, both of which change on reuse. Treehouse names slots the same way (E-TH-7).
-- **A reused path inherits path-keyed harness state.** Claude Code and Cursor key per-project
-  state by working directory (E-PROC-CC6, E-PROC-CUR2), so in a reused worktree `claude --continue`
-  resumes the previous task's conversation. Codex and Copilot key by session id (E-PROC-CX3,
-  E-PROC-COP3). The library reports `reused` and the previous branch so callers can start fresh
-  sessions; it does not delete harness state.
+- **A reused path inherits path-keyed harness state.** Claude Code, Cursor, Qwen Code, opencode,
+  and Kilo key per-project state by working directory (E-PROC-CC6, E-PROC-CUR2, E-PROC-QWEN1,
+  E-PROC-OC1, E-PROC-KILO1), so in a reused worktree a "continue" resumes the previous task. Codex,
+  Copilot, Goose, OpenHands, and Cline key by session id (E-PROC-CX3, E-PROC-COP3, E-PROC-GOOSE1,
+  E-PROC-OH1, E-PROC-CLINE1). Crush keeps its state in `<cwd>/.crush/` inside the worktree
+  (E-PROC-CRUSH1): unless the repo ignores it, it makes the worktree dirty, and a recycle's
+  `clean -fd` deletes it. The library reports `reused` and the previous branch so callers can start
+  fresh sessions; it does not delete harness state.
+- **Cline also makes its own worktrees,** under `~/.cline/worktrees/` (E-PROC-CLINE3, help text
+  only); treat them as foreign.
 - **Recognise Claude Code worktrees by their lock reason.** `claude session <name> (pid N start T)`
   (E-PROC-CC5) names the owner and lets a stale lock be told from a live one.
 - **Recycle without `-x`.** `read-tree --reset -u <base>` then `clean -fd` keeps `node_modules`
@@ -134,6 +157,8 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - herdr's worktree path and branch scheme; read its source.
 - Copilot CLI local `/worktree` layout.
 - macOS probe behaviour, observed rather than read from headers (E-PROC-OS2).
+- Gemini CLI tool-process markers (model unavailable during the run), Auggie (not logged in), and
+  OpenHands in Docker sandbox mode, where tool processes are not on the host at all.
 - Whether reading another process's environment (needed for the Cursor worker exclusion) works on
   macOS for same-user processes.
 - Claude Code memory sharing across worktrees: `memory/` appeared only under the primary checkout

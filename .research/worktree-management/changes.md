@@ -49,3 +49,12 @@ state and Claude Code's lock-reason format. Cursor's tool environment remains un
 Re-ran the Cursor experiment logged in (E-PROC-CUR3, E-PROC-CUR4). Cursor's worker shares the
 session's exe and argv and outlives it, so the probe excludes it by its `AGENT_CLI_*` environment.
 `CURSOR_CONVERSATION_ID` links orphans to their session.
+
+## 2026-10-05 — eight more harnesses
+
+Probed opencode, Kilo, Qwen Code, Crush, Gemini CLI, Goose, OpenHands, and Cline (E-PROC-OC1 to
+E-PROC-ENV1); Auggie was not logged in. Added a per-harness session signature table. Wrapper plus
+child pairs count as one session; shared daemons (Cline's hub, OpenHands' tmux server) are not
+sessions. Tool processes with neither a session ancestor nor a link variable are reported as
+unlinked rather than lingering. Extended the path-keyed state list; Crush stores state inside the
+worktree.
