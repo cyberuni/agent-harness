@@ -29,6 +29,7 @@
 	"exports": {
 		".": "./dist/index.js",
 		"./commands": "./dist/commands.js",
+		"./worktrees": "./dist/worktrees.js",
 		"./package.json": "./package.json"
 	},
 	"bin": {

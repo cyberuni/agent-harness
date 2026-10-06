@@ -29,13 +29,16 @@ function typeCheck(declarations: string) {
 	}
 }
 
-it('exports the root and ./commands, and keeps command-output internal', () => {
+it('exports the root, ./commands, and ./worktrees, and keeps command-output internal', () => {
 	const manifest = JSON.parse(readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8'))
-	expect(Object.keys(manifest.exports)).toEqual(['.', './commands', './package.json'])
+	expect(Object.keys(manifest.exports)).toEqual(['.', './commands', './worktrees', './package.json'])
 })
 
 // TypeScript 6 defaults `types` to `[]`, so a consumer without `@types/node` in its types must
 // still be able to load the published declarations. `pnpm test` builds `dist` first.
-it.each(['index.d.ts', 'commands.d.ts'])('the published %s type-checks without @types/node', (declarations) => {
-	expect(() => typeCheck(declarations)).not.toThrow()
-})
+it.each(['index.d.ts', 'commands.d.ts', 'worktrees.d.ts'])(
+	'the published %s type-checks without @types/node',
+	(declarations) => {
+		expect(() => typeCheck(declarations)).not.toThrow()
+	},
+)
