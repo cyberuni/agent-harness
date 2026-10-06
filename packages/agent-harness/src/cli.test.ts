@@ -72,6 +72,19 @@ describe('run', () => {
 		expect(await run(['node', 'agent-harness', '--version'])).toBe(0)
 	})
 
+	it.each([
+		['show', 'name'],
+		['list'],
+		['search', 'anything'],
+		['where', 'name'],
+		['create', 'name'],
+		['delete', 'name'],
+	])('rejects an unsupported --format on %s as a usage error, before the command runs', async (...subcommand) => {
+		const argv = ['node', 'agent-harness', 'reference', ...subcommand, '--format', 'yaml', '--root', tempRoot()]
+		expect(await run(argv)).toBe(2)
+		expect(stdout).not.toHaveBeenCalled()
+	})
+
 	it('reports a failure the parser throws on stderr, as a usage error', async () => {
 		thrown.value = new Error('bad argv')
 		expect(await run(['node', 'agent-harness', 'reference', 'list'])).toBe(2)

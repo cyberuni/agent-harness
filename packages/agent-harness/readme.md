@@ -289,7 +289,9 @@ npx -y @cyberuni/agent-harness reference delete <name> --scope project --dry-run
 plugin's copy, once a project override of it is gone. It refuses a plugin-shipped or managed copy.
 
 Output is [TOON](https://github.com/toon-format/toon) by default, for an agent to parse; pass
-`--format json` or `--format text`. A CLI built on [`clibuilder`](https://www.npmjs.com/package/clibuilder)
+`--format json` or `--format text` (`show`, `create`, and `delete` default to `text`). The formats
+follow [`@clibuilder/axi`](https://www.npmjs.com/package/@clibuilder/axi), and any other value is a
+usage error (exit code 2). A CLI built on [`clibuilder`](https://www.npmjs.com/package/clibuilder)
 can host the same command under its own plugin name, imported from the `./commands` subpath:
 
 ```ts

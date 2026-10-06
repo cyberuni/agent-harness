@@ -209,9 +209,9 @@ importers:
 
   packages/agent-harness:
     dependencies:
-      '@toon-format/toon':
-        specifier: ^4.1.1
-        version: 4.1.1
+      '@clibuilder/axi':
+        specifier: ^0.1.0
+        version: 0.1.0(clibuilder@11.3.2(typescript@7.0.2))
       clibuilder:
         specifier: ^11.3.0
         version: 11.3.2(typescript@7.0.2)
@@ -575,6 +575,12 @@ packages:
   '@clack/prompts@1.8.1':
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
+
+  '@clibuilder/axi@0.1.0':
+    resolution: {integrity: sha512-axduLxgCRP33iEPv8AGeFY9xDo0z6LH5JwhqpF/JqNmKo99UNI5rmSLduEjCfgIBc7TRwM1jiV0mBFNPKuLabA==}
+    engines: {node: '>= 20.19'}
+    peerDependencies:
+      clibuilder: ^11.0.0
 
   '@commitlint/cli@21.2.3':
     resolution: {integrity: sha512-5yOX6IRjcrIReCxpyAd04hgI/yhUMpVBJ/ouwFV0wk9yx5+fYRDWZWJ5h55Tbedgfol+5m2mU5nqzbB8g3v0vQ==}
@@ -3920,6 +3926,11 @@ snapshots:
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
+
+  '@clibuilder/axi@0.1.0(clibuilder@11.3.2(typescript@7.0.2))':
+    dependencies:
+      '@toon-format/toon': 4.1.1
+      clibuilder: 11.3.2(typescript@7.0.2)
 
   '@commitlint/cli@21.2.3(@types/node@24.13.6)(conventional-commits-parser@7.1.2)(typescript@7.0.2)':
     dependencies:
