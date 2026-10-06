@@ -23,6 +23,7 @@ export default defineConfig([
 		entry: {
 			index: 'src/index.ts',
 			commands: 'src/commands.ts',
+			worktrees: 'src/worktrees/index.ts',
 		},
 		dts: true,
 		clean: true,
