@@ -41,15 +41,38 @@ E-HERDR-W1), so the library reports `unknown` for them.
 | Reuse an idle worktree instead of creating one | mux, legion, fleet | E-MUX-6, E-LEG-2, E-FLEET-1 |
 | Keep a worktree when its unit closes, for the next unit | legion, fleet | E-LEG-2 |
 | A caller-supplied creator, so herdr can create and bind the worktree | mux, legion | E-MUX-7 |
-| One writer per worktree at a time | fleet (planned) | E-FLEET-1 |
+| One owner per worktree, many concurrent sessions (implementer, judge, doc watcher) | fleet, user requirement 2026-10-05 | E-FLEET-1 |
+| A live agent session marks a worktree busy; a dev service does not | user requirement 2026-10-05 | — |
+| Report dev services left behind (vite, vitest) | user requirement 2026-10-05 | — |
 
 ## Recommended design (not yet built)
 
+- **Ownership and occupancy are separate facts.** A worktree has at most one *owner* (a lease),
+  such as a cyberfleet Captain or Pod. It can have any number of *occupants*: the owner's
+  subagents, a reviewer or judge session, a watcher that updates docs. The library records and
+  reports occupants but never limits how many there are, what role they play, or who may write.
+  Coordinating writers is the caller's job, not the library's.
 - **Lease = git's worktree lock.** Claim a worktree by exclusive-creating
   `$GIT_COMMON_DIR/worktrees/<id>/locked` with a reason naming the library, a lease ID, and the
   holder. git then refuses to remove or prune it, and Claude Code's sweep never releases a lock it
   did not set (E-CC-W4). Whether git tolerates a structured reason, and whether the exclusive create
   holds against `git worktree lock`, is unverified: spike it before building on it.
+- **A live agent session makes a worktree busy; a dev service does not.** Two signals:
+  - *Registered occupants.* A session that attaches records its session id, free-form role, PID,
+    and process start time (start time defeats PID reuse, E-TH-1). Liveness is the PID still
+    running with that start time. This is authoritative and works on every platform.
+  - *Discovered sessions.* An optional, injectable process probe finds harness processes whose
+    working directory is inside the worktree, so an unregistered session (a user typing `claude`
+    there) also counts. It must tell a harness's own session process from the tool subprocesses
+    the harness spawns: a `vite` or `vitest` launched from Claude Code's Bash tool inherits
+    `CLAUDECODE=1` but also carries `CLAUDE_CODE_CHILD_SESSION=1` (E-CC-D1, E-CC-D3), so
+    environment alone would misread it as a session. How to recognise each harness's session
+    process is unresearched; until it is, the probe reports `unknown` for that harness.
+  - Busy is reported as its own status, not folded into `dirty`, so callers can explain it.
+- **Lingering dev services are reported, never killed.** Processes inside the worktree that are not
+  agent sessions (dev servers, test watchers) do not block reuse. When no live session launched
+  them, the library lists them as lingering so a caller can reclaim the resources. Shutting
+  sessions and services down belongs to the caller; for Captains and Pods that is cyberfleet.
 - **Availability is a fail-closed predicate with reasons,** checked in this order: ours, not locked,
   not prunable, clean with `--untracked-files=all`, HEAD merged into the reset target (E-TH-2).
   Re-check after the claim.
@@ -58,10 +81,15 @@ E-HERDR-W1), so the library reports `unknown` for them.
   E-MUX-8).
 - **No repo-supplied shell.** Setup hooks are callbacks. Copying from `.worktreeinclude` is optional
   and records what it copied (E-TH-4, E-CC-W2).
-- **No implicit fetch, no process scanning, no killing.** These belong to the caller (E-TH-5).
+- **No implicit fetch, no killing.** Process inspection is a pluggable probe, never a kill
+  (E-TH-5).
 
 ## Open questions
 
 - The Claude Code worktree marker file name (E-CC-W3 says only that one exists).
 - herdr's worktree path and branch scheme; read its source.
 - Copilot CLI local `/worktree` layout.
+- How to recognise each harness's session process (executable, arguments, environment) as distinct
+  from the tool subprocesses it spawns, on Linux, macOS, and Windows. Needed by the process probe.
+- Whether a session's working directory reliably identifies the worktree it works in (Claude Code
+  `--add-dir`, a session started in the primary checkout that edits a worktree).
