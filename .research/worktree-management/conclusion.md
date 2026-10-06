@@ -33,7 +33,7 @@ E-HERDR-W1), so the library reports `unknown` for them.
 | --- | --- | --- |
 | Resolve the primary checkout from any linked worktree | mux, legion, fleet | E-MUX-1 |
 | List worktrees from `git worktree list --porcelain` | mux, legion, fleet | E-MUX-1 |
-| Sibling layout `<parent>/<repo>.worktrees/<name>` with a caller-chosen name | mux, legion | E-MUX-2, E-LEG-1 |
+| Sibling layout `<parent>/<repo>.worktrees/<n>`; the library assigns `<n>`, never the caller | mux, legion; decision 2026-10-05 | E-MUX-2, E-LEG-1 |
 | Merged detection: ancestor, upstream gone, squash-patch, optional forge probe | mux, fleet | E-MUX-4 |
 | Dirty check with an ignore list for tool-owned marker files | mux, legion | E-MUX-5, E-LEG-3 |
 | Refuse the primary checkout, with no force override | mux, legion | E-MUX-5 |
@@ -83,6 +83,12 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - **Availability is a fail-closed predicate with reasons,** checked in this order: ours, not locked,
   not prunable, clean with `--untracked-files=all`, HEAD merged into the reset target (E-TH-2).
   Re-check after the claim.
+- **The library names worktrees; the name means nothing.** The path is
+  `<parent>/<repo>.worktrees/<n>`, where `<n>` is the lowest unused number, and it never changes
+  for the worktree's life. A caller-chosen name (cyber-mux passes the branch, E-MUX-2; cyberlegion
+  passes `legion-<id6>`, E-LEG-1) describes the first task and misleads every later one once the
+  worktree is reused (decision 2026-10-05). What the worktree is for lives in its branch and its
+  lease holder, both of which change on reuse. Treehouse names slots the same way (E-TH-7).
 - **Recycle without `-x`.** `read-tree --reset -u <base>` then `clean -fd` keeps `node_modules`
   (E-TH-3). cyber-mux's `clean -fdx` throws away the install reuse is meant to save (E-MUX-6,
   E-MUX-8).
@@ -98,5 +104,7 @@ E-HERDR-W1), so the library reports `unknown` for them.
 - Copilot CLI local `/worktree` layout.
 - How to recognise each harness's session process (executable, arguments, environment) as distinct
   from the tool subprocesses it spawns, on Linux, macOS, and Windows. Needed by the process probe.
+- Whether a harness keys per-project state by the worktree's path (for example Claude Code's
+  project transcripts and memory), so that a reused path carries one task's history into the next.
 - Whether a harness changes its own process working directory when it enters a worktree (Claude
   Code `EnterWorktree`), which decides whether the probe sees it.

@@ -29,6 +29,7 @@ from a README or implied. **Low** means indirect.
 | E-TH-3 | Reset holds git's `HEAD.lock` (O_EXCL), re-checks HEAD, runs `git read-tree --reset -u <ref>` then `git clean -fd` (no `-x`), leaving HEAD detached | `internal/vcs/gitvcs/gitvcs.go` | 2026-10-05 | High — source |
 | E-TH-4 | Hooks only from user-level config (repo hooks ignored); `.worktreeinclude` read from committed HEAD, copies recorded in state for exact undo | `internal/config/config.go`, `internal/hooks/hooks.go` | 2026-10-05 | High — source |
 | E-TH-5 | Fetches `origin` on every `get` unless `--no-fetch`; scans the process table and kills lingering processes on return | `cmd/get.go`, `internal/process/detect.go` | 2026-10-05 | High — source |
+| E-TH-7 | Slot names are monotonic integers, stable for the slot's life; default path `~/.treehouse/<repo>-<hash>/<slot>/<repo>` | `internal/pool/pool.go`, `internal/pool/worktree_path.go` | 2026-10-05 | High — source |
 | E-TH-6 | No importable API; everything is `internal/*` behind a CLI | repository layout | 2026-10-05 | High — source |
 
 ## Other tools

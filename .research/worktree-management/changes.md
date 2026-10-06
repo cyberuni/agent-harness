@@ -19,3 +19,9 @@ Dropped registered occupants. The lease is the only record the library writes; o
 by the process probe. Registration covered only sessions the probe cannot see, and those matter
 only in an unowned worktree, which was judged acceptable. Release no longer recycles; the next
 acquire does, after the probe.
+
+## 2026-10-05 — library-assigned names
+
+The library assigns each worktree's directory name (lowest unused number) and the caller cannot
+choose it, because a meaningful name misleads once the worktree is reused. Added an open question on
+harness state keyed by path.
