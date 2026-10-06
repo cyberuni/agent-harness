@@ -25,3 +25,8 @@ acquire does, after the probe.
 The library assigns each worktree's directory name (lowest unused number) and the caller cannot
 choose it, because a meaningful name misleads once the worktree is reused. Added an open question on
 harness state keyed by path.
+
+## 2026-10-05 — `<repo>-<n>` basename
+
+Worktree directories are `<repo>.worktrees/<repo>-<n>`, so a tool that shows only the folder name
+still names the repo.

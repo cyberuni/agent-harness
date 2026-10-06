@@ -33,7 +33,7 @@ E-HERDR-W1), so the library reports `unknown` for them.
 | --- | --- | --- |
 | Resolve the primary checkout from any linked worktree | mux, legion, fleet | E-MUX-1 |
 | List worktrees from `git worktree list --porcelain` | mux, legion, fleet | E-MUX-1 |
-| Sibling layout `<parent>/<repo>.worktrees/<n>`; the library assigns `<n>`, never the caller | mux, legion; decision 2026-10-05 | E-MUX-2, E-LEG-1 |
+| Sibling layout `<parent>/<repo>.worktrees/<repo>-<n>`; the library assigns `<n>`, never the caller | mux, legion; decision 2026-10-05 | E-MUX-2, E-LEG-1 |
 | Merged detection: ancestor, upstream gone, squash-patch, optional forge probe | mux, fleet | E-MUX-4 |
 | Dirty check with an ignore list for tool-owned marker files | mux, legion | E-MUX-5, E-LEG-3 |
 | Refuse the primary checkout, with no force override | mux, legion | E-MUX-5 |
@@ -84,7 +84,7 @@ E-HERDR-W1), so the library reports `unknown` for them.
   not prunable, clean with `--untracked-files=all`, HEAD merged into the reset target (E-TH-2).
   Re-check after the claim.
 - **The library names worktrees; the name means nothing.** The path is
-  `<parent>/<repo>.worktrees/<n>`, where `<n>` is the lowest unused number, and it never changes
+  `<parent>/<repo>.worktrees/<repo>-<n>`, where `<n>` is the lowest unused number and the `<repo>-` prefix keeps the basename identifiable in tools that show only the folder name, and it never changes
   for the worktree's life. A caller-chosen name (cyber-mux passes the branch, E-MUX-2; cyberlegion
   passes `legion-<id6>`, E-LEG-1) describes the first task and misleads every later one once the
   worktree is reused (decision 2026-10-05). What the worktree is for lives in its branch and its
